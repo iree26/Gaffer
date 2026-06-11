@@ -1,16 +1,11 @@
-// GafferHero.jsx — v6 (bouncy supporting text)
-// "Gaffer" World Cup 2026 hero. White bg, green type, Syne display via @fontsource (always loads),
-// real flag images via flag-icons (render identically on every OS, unlike emoji on Windows).
-//
-// REQUIRED PACKAGES:  npm install flag-icons @fontsource/syne @fontsource/plus-jakarta-sans
-// Also make sure src/index.css is the reset version (see chat) so the page fills the full width.
-
+import { useNavigate } from 'react-router-dom'
 import 'flag-icons/css/flag-icons.min.css';
 import '@fontsource/syne/700.css';
 import '@fontsource/syne/800.css';
 import '@fontsource/plus-jakarta-sans/500.css';
 import '@fontsource/plus-jakarta-sans/600.css';
 import '@fontsource/plus-jakarta-sans/700.css';
+
 
 // ISO 3166-1 alpha-2 codes (lowercase) for flag-icons.
 const FLAGS = [
@@ -37,6 +32,7 @@ function FlagRow({ reverse, dur }) {
 }
 
 export default function GafferHero() {
+    const navigate = useNavigate() 
   let wi = 0;
   return (
     <>
@@ -302,7 +298,7 @@ export default function GafferHero() {
           </h1>
           <p className="sub">Predict every match, earn your stars, and prove you read the game better than anyone.</p>
           <div className="row">
-            <button className="cta">Make your first call</button>
+           <button className="cta" onClick={() => navigate('/signup')}>Make your first call</button>
             <div className="trust">
               <span className="stars">
                 {[0,1,2,3,4].map(n => (
