@@ -1,4 +1,3 @@
-// GafferBackground.jsx — the shared living pitch behind every page.
 function Ball({ className }) {
   return (
     <svg className={className} viewBox="0 0 200 200" aria-hidden="true">
@@ -25,44 +24,42 @@ export default function GafferBackground() {
     <div className="gaffer-bg" aria-hidden="true">
       <style>{`
         .gaffer-bg{ position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none; }
-        .gbg-base{ position:absolute; inset:0; background:linear-gradient(160deg,#FFFFFF 0%,#F2FBF4 55%,#EAF7ED 100%); }
+        .gbg-base{ position:absolute; inset:0; background:linear-gradient(160deg,#FFFFFF 0%,#E6F6EA 50%,#D2EDD9 100%); }
         .gbg-stripes{ position:absolute; inset:-5% -5%;
-          background:repeating-linear-gradient(90deg,#F5FCF6 0 56px,#E6F5EA 56px 112px);
-          opacity:.7; animation:gbgDrift 40s linear infinite; }
+          background:repeating-linear-gradient(90deg,#EAF8ED 0 56px,#D2EBD8 56px 112px);
+          opacity:.9; animation:gbgDrift 40s linear infinite; }
         @keyframes gbgDrift{ from{ transform:translateX(0);} to{ transform:translateX(112px);} }
-        .gbg-pitch{ position:absolute; inset:0; width:100%; height:100%; opacity:.6; }
+        .gbg-pitch{ position:absolute; inset:0; width:100%; height:100%; opacity:.9; }
         .gbg-sweep{ position:absolute; top:-40%; left:-30%; width:60%; height:180%;
-          background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.55),rgba(255,255,255,0));
+          background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.5),rgba(255,255,255,0));
           transform:rotate(8deg); filter:blur(8px); animation:gbgSweep 14s ease-in-out infinite; }
         @keyframes gbgSweep{ 0%{ left:-40%;} 50%{ left:90%;} 100%{ left:-40%;} }
-        .gbg-glow{ position:absolute; width:60vw; height:60vw; border-radius:50%; filter:blur(80px); opacity:.4;
-          background:radial-gradient(circle,rgba(63,224,127,.45),rgba(63,224,127,0) 70%); animation:gbgGlow 18s ease-in-out infinite; }
+        .gbg-glow{ position:absolute; width:60vw; height:60vw; border-radius:50%; filter:blur(80px); opacity:.5;
+          background:radial-gradient(circle,rgba(63,224,127,.5),rgba(63,224,127,0) 70%); animation:gbgGlow 18s ease-in-out infinite; }
         .gbg-glow.a{ top:-18vw; right:-12vw; }
         .gbg-glow.b{ bottom:-22vw; left:-15vw; animation-duration:24s; animation-direction:reverse;
-          background:radial-gradient(circle,rgba(22,180,95,.4),rgba(22,180,95,0) 70%); }
+          background:radial-gradient(circle,rgba(22,180,95,.45),rgba(22,180,95,0) 70%); }
         @keyframes gbgGlow{ 0%,100%{ transform:translate(0,0) scale(1);} 50%{ transform:translate(3vw,2vw) scale(1.12);} }
-        .gbg-ball{ position:absolute; opacity:.15; animation:gbgRoll 28s linear infinite; }
+        .gbg-ball{ position:absolute; opacity:.22; animation:gbgRoll 28s linear infinite; }
         .gbg-ball.big{ width:42vmin; height:42vmin; right:-10vmin; top:6vh; }
-        .gbg-ball.small{ width:18vmin; height:18vmin; left:-4vmin; bottom:7vh; opacity:.11; animation-duration:36s; animation-direction:reverse; }
+        .gbg-ball.small{ width:18vmin; height:18vmin; left:-4vmin; bottom:7vh; opacity:.16; animation-duration:36s; animation-direction:reverse; }
         @keyframes gbgRoll{ to{ transform:rotate(360deg);} }
         @media (prefers-reduced-motion: reduce){ .gbg-stripes,.gbg-sweep,.gbg-glow,.gbg-ball{ animation:none !important; } }
       `}</style>
       <div className="gbg-base" />
       <div className="gbg-stripes" />
       <svg className="gbg-pitch" viewBox="0 0 1050 680" preserveAspectRatio="xMidYMid slice"
-           fill="none" stroke="rgba(11,107,58,.13)" strokeWidth="2.5">
+           fill="none" stroke="rgba(11,107,58,.22)" strokeWidth="3">
         <rect x="20" y="20" width="1010" height="640" />
         <line x1="525" y1="20" x2="525" y2="660" />
         <circle cx="525" cy="340" r="90" />
-        <circle cx="525" cy="340" r="4" fill="rgba(11,107,58,.13)" stroke="none" />
+        <circle cx="525" cy="340" r="5" fill="rgba(11,107,58,.22)" stroke="none" />
         <rect x="20" y="138" width="165" height="403" />
         <rect x="20" y="248" width="55" height="183" />
         <path d="M185,267.5 A91,91 0 0 1 185,412.5" />
         <rect x="865" y="138" width="165" height="403" />
         <rect x="975" y="248" width="55" height="183" />
         <path d="M865,267.5 A91,91 0 0 0 865,412.5" />
-        <path d="M32,20 A12,12 0 0 1 20,32" /><path d="M1018,20 A12,12 0 0 0 1030,32" />
-        <path d="M20,648 A12,12 0 0 0 32,660" /><path d="M1030,648 A12,12 0 0 1 1018,660" />
       </svg>
       <div className="gbg-sweep" />
       <div className="gbg-glow a" /><div className="gbg-glow b" />
