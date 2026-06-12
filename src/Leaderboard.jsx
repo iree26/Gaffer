@@ -16,8 +16,13 @@ const TOP = [
   { rank: 7, name: "muktar_m", stars: 3.5, accuracy: 74, move: 0 },
 ];
 
-const YOU = { rank: 248, name: "ireoluwa (you)", stars: 4.5, accuracy: 0, move: 0 };
-
+const YOU = {
+  rank: user.rank ?? 248,
+  name: `${user.displayName} (you)`,
+  stars: user.displayStars || 0,
+  accuracy: user.accuracy ?? 0,
+  move: user.move ?? 0,
+};
 const BOTTOM = [
   { rank: 5010, name: "coinflip_kev", stars: 1.5, accuracy: 24, move: -4 },
   { rank: 5011, name: "always_wrong", stars: 1.0, accuracy: 19, move: 1 },
