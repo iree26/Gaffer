@@ -5,7 +5,7 @@ import '@fontsource/syne/800.css';
 import '@fontsource/plus-jakarta-sans/500.css';
 import '@fontsource/plus-jakarta-sans/600.css';
 import '@fontsource/plus-jakarta-sans/700.css';
-
+import GafferBackground from './GafferBackground'
 
 // ISO 3166-1 alpha-2 codes (lowercase) for flag-icons.
 const FLAGS = [
@@ -32,24 +32,20 @@ function FlagRow({ reverse, dur }) {
 }
 
 export default function GafferHero() {
-    const navigate = useNavigate() 
+  const navigate = useNavigate()
   let wi = 0;
   return (
     <>
-
       <style>{`
-
         .gaffer{
           --ink:#0B6B3A; --deep:#075E32; --bright:#16B45F; --lime:#3FE07F; --pitch:#15924D;
           --display:'Syne','Plus Jakarta Sans',sans-serif;
-          position:relative; min-height:100svh; width:100%; overflow:hidden; background:#fff;
+          position:relative; min-height:100svh; width:100%; overflow:hidden; background:transparent;
           font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:var(--ink); isolation:isolate;
         }
-        .grass{ position:absolute; inset:0; z-index:-5; opacity:.05;
-          background:repeating-linear-gradient(90deg,var(--pitch) 0 60px,transparent 60px 120px); }
 
-        /* ---- flag slideshow ---- */
-        .flags-top,.flags-bottom{ position:absolute; left:0; right:0; z-index:-3;
+        /* ---- flag slideshow (now sits above the shared pitch) ---- */
+        .flags-top,.flags-bottom{ position:absolute; left:0; right:0; z-index:1;
           display:flex; flex-direction:column; gap:1.1rem; opacity:0; pointer-events:none;
           animation:flagsIn 1s 3.3s cubic-bezier(.2,.7,.2,1) forwards; }
         .flags-top{ top:4vh; } .flags-bottom{ bottom:4vh; }
@@ -72,7 +68,7 @@ export default function GafferHero() {
         @keyframes scene{
           0%{ opacity:0; transform:scale(1.05); }
           20%{ opacity:1; transform:scale(1); }
-          62%{ opacity:1; transform:scale(1); }      /* hold so the pitch + goal can be seen */
+          62%{ opacity:1; transform:scale(1); }
           100%{ opacity:0; transform:scale(2.7); }
         }
 
@@ -81,17 +77,16 @@ export default function GafferHero() {
           animation:ballKick 2.4s 1.55s cubic-bezier(.4,.05,.25,1) forwards; }
         @keyframes ballKick{
           0%  { opacity:0; transform:translate(-50%,-50%) scale(.2)  rotate(0deg); }
-          10% { opacity:1; transform:translate(-50%,-50%) scale(1)   rotate(30deg); }   /* ball forms */
-          28% { transform:translate(-50%,-53%) scale(1)   rotate(80deg); }              /* float + slow spin */
-          46% { transform:translate(-50%,-50%) scale(1)   rotate(120deg); }             /* linger — let it shine */
-          56% { transform:translate(-50%,-66%) scale(1)   rotate(150deg); }             /* bounce up */
-          66% { transform:translate(-50%,-50%) scale(1)   rotate(178deg); }             /* land */
-          78% { transform:translate(-58%,-42%) scale(.95) rotate(190deg); }             /* wind up (pull back) */
+          10% { opacity:1; transform:translate(-50%,-50%) scale(1)   rotate(30deg); }
+          28% { transform:translate(-50%,-53%) scale(1)   rotate(80deg); }
+          46% { transform:translate(-50%,-50%) scale(1)   rotate(120deg); }
+          56% { transform:translate(-50%,-66%) scale(1)   rotate(150deg); }
+          66% { transform:translate(-50%,-50%) scale(1)   rotate(178deg); }
+          78% { transform:translate(-58%,-42%) scale(.95) rotate(190deg); }
           86% { opacity:1; }
-          100%{ opacity:0; transform:translate(75%,-165%) scale(1.18) rotate(900deg); } /* KICKED off-screen */
+          100%{ opacity:0; transform:translate(75%,-165%) scale(1.18) rotate(900deg); }
         }
 
-        /* ---- foreground text, all entering with motion ---- */
         .brand{ position:absolute; top:clamp(1.4rem,4vh,2.2rem); left:clamp(1.4rem,5vw,3rem); z-index:5;
           font-family:var(--display); font-weight:700; font-size:clamp(1.25rem,2.8vw,1.6rem);
           letter-spacing:-.01em; color:var(--deep);
@@ -176,7 +171,7 @@ export default function GafferHero() {
 
         @media (prefers-reduced-motion: reduce){
           .intro{ display:none; }
-          .grass,.row-bob,.row-drift,.accent{ animation:none !important; }
+          .row-bob,.row-drift,.accent{ animation:none !important; }
           .flags-top,.flags-bottom{ opacity:.5 !important; animation:none !important; }
           .brand,.eyebrow,.sub,.cta,.st{ opacity:1 !important; transform:none !important; clip-path:none !important; animation:none !important; }
           .word{ opacity:1 !important; transform:none !important; animation:none !important; }
@@ -186,7 +181,7 @@ export default function GafferHero() {
       `}</style>
 
       <div className="gaffer">
-        <div className="grass" />
+        <GafferBackground />
 
         <div className="flags-top" aria-hidden="true">
           <FlagRow reverse={false} dur={40} />
@@ -298,7 +293,7 @@ export default function GafferHero() {
           </h1>
           <p className="sub">Predict every match, earn your stars, and prove you read the game better than anyone.</p>
           <div className="row">
-           <button className="cta" onClick={() => navigate('/signup')}>Make your first call</button>
+            <button className="cta" onClick={() => navigate('/signup')}>Make your first call</button>
             <div className="trust">
               <span className="stars">
                 {[0,1,2,3,4].map(n => (

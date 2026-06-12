@@ -1,7 +1,3 @@
-// PredictionScreen.jsx — pick the winner of all 12 groups (A–L).
-// Real 2026 group draw. Two cards per row. Heavy on the animation.
-// Packages already installed: flag-icons, @fontsource/syne, @fontsource/plus-jakarta-sans, react-router-dom
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import 'flag-icons/css/flag-icons.min.css';
@@ -10,6 +6,7 @@ import '@fontsource/syne/800.css';
 import '@fontsource/plus-jakarta-sans/500.css';
 import '@fontsource/plus-jakarta-sans/600.css';
 import '@fontsource/plus-jakarta-sans/700.css';
+import GafferBackground from './GafferBackground';
 
 // [team name, flag-icons code]. Real 2026 draw.
 const GROUPS = [
@@ -29,7 +26,7 @@ const GROUPS = [
 
 export default function PredictionScreen() {
   const navigate = useNavigate();
-  const [picks, setPicks] = useState({});      // { groupId: teamIndex }
+  const [picks, setPicks] = useState({});
   const [submitted, setSubmitted] = useState(false);
 
   const done = Object.keys(picks).length;
@@ -42,23 +39,23 @@ export default function PredictionScreen() {
 
   function submit() {
     if (!complete) return;
-    // REAL: POST each pick to /agent/predict (one Market per group). For now just lock the UI.
+    // REAL: POST each pick to /agent/predict (one Market per group).
     setSubmitted(true);
   }
 
   return (
     <div className="gaffer-app">
+      <GafferBackground />
       <style>{`
         .gaffer-app{
           --ink:#0B6B3A; --deep:#075E32; --bright:#16B45F; --lime:#3FE07F;
           --line:rgba(11,107,58,.14); --soft:#F3FAF5;
           --display:'Syne','Plus Jakarta Sans',sans-serif;
-          min-height:100svh; width:100%; background:#fff; color:var(--ink);
+          min-height:100svh; width:100%; background:transparent; color:var(--ink);
           font-family:'Plus Jakarta Sans',system-ui,sans-serif; padding-bottom:7rem;
         }
 
-        /* sticky progress header */
-        .topbar{ position:sticky; top:0; z-index:20; background:rgba(255,255,255,.9); backdrop-filter:blur(10px);
+        .topbar{ position:sticky; top:0; z-index:20; background:rgba(255,255,255,.82); backdrop-filter:blur(12px);
           border-bottom:1px solid var(--line); padding:.85rem clamp(1rem,5vw,3rem); }
         .toprow{ display:flex; align-items:center; justify-content:space-between; gap:1rem; }
         .logo{ font-family:var(--display); font-weight:800; font-size:1.3rem; color:var(--deep); cursor:pointer; letter-spacing:-.01em; }
@@ -77,13 +74,12 @@ export default function PredictionScreen() {
         .hsub{ margin:.5rem 0 1.6rem; color:var(--deep); opacity:.8; font-weight:500; animation:fadeUp .6s .08s both; }
         @keyframes fadeUp{ from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:none;} }
 
-        /* the two-per-row grid with a 3D cascade entrance */
         .grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:1rem; perspective:1200px; }
-        .card{ border:1px solid var(--line); border-radius:18px; padding:1rem; background:#fff;
-          box-shadow:0 4px 20px rgba(7,94,50,.05); transform-origin:center top;
+        .card{ border:1px solid var(--line); border-radius:18px; padding:1rem; background:rgba(255,255,255,.78);
+          backdrop-filter:blur(8px); box-shadow:0 4px 20px rgba(7,94,50,.06); transform-origin:center top;
           animation:cardIn .6s both cubic-bezier(.2,.8,.25,1);
           transition:box-shadow .22s ease, transform .22s ease; }
-        .card:hover{ box-shadow:0 12px 34px rgba(7,94,50,.12); transform:translateY(-4px); }
+        .card:hover{ box-shadow:0 12px 34px rgba(7,94,50,.13); transform:translateY(-4px); }
         @keyframes cardIn{ from{opacity:0; transform:translateY(38px) rotateX(-16deg) scale(.95);} to{opacity:1; transform:none;} }
 
         .card-head{ display:flex; align-items:baseline; justify-content:space-between; gap:.5rem; margin-bottom:.75rem; }
@@ -114,9 +110,8 @@ export default function PredictionScreen() {
         .card.decided .team:not(.win){ opacity:.4; transform:scale(.96); filter:saturate(.55); }
         @keyframes ripple{ 0%{transform:translate(-50%,-50%) scale(0); opacity:.7;} 100%{transform:translate(-50%,-50%) scale(28); opacity:0;} }
 
-        /* sticky submit bar */
         .submitbar{ position:fixed; left:0; right:0; bottom:0; z-index:30; display:flex; align-items:center; justify-content:space-between;
-          gap:1rem; padding:1rem clamp(1rem,5vw,3rem); background:rgba(255,255,255,.92); backdrop-filter:blur(12px);
+          gap:1rem; padding:1rem clamp(1rem,5vw,3rem); background:rgba(255,255,255,.9); backdrop-filter:blur(12px);
           border-top:1px solid var(--line); transform:translateY(120%); animation:barUp .5s .3s forwards cubic-bezier(.2,.8,.25,1); }
         @keyframes barUp{ to{ transform:translateY(0); } }
         .submit-label{ font-weight:700; font-size:.9rem; color:var(--deep); }
