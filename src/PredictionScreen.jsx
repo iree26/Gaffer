@@ -7,6 +7,8 @@ import '@fontsource/syne/800.css';
 import '@fontsource/plus-jakarta-sans/500.css';
 import '@fontsource/plus-jakarta-sans/600.css';
 import '@fontsource/plus-jakarta-sans/700.css';
+import Avatar from './Avatar';
+
 
 function PitchBall({ className }) {
   return (
@@ -339,11 +341,16 @@ export default function PredictionScreen() {
       `}</style>
 
       <div className="topbar">
+        <div style={{ display:'flex', alignItems:'center', gap:'1.1rem' }}>
+             <span className="nav" onClick={() => navigate('/predict')}>Predictions →</span>
+            <Avatar size={32} />
+        </div>
         <div className="toprow">
           <div className="logo" onClick={() => navigate('/')}>GAFF<span>ER</span></div>
           <div className="topnav">
             <span className="count"><b>{done}</b>/{GROUPS.length} called</span>
             <span className="tablelink" onClick={() => navigate('/leaderboard')}>Table →</span>
+            <Avatar size={32} />
           </div>
         </div>
         <div className="bar"><div className={`bar-fill${complete ? " full" : ""}`} style={{ width: `${(done / GROUPS.length) * 100}%` }} /></div>

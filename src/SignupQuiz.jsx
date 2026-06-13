@@ -7,7 +7,7 @@ import '@fontsource/plus-jakarta-sans/500.css';
 import '@fontsource/plus-jakarta-sans/600.css';
 import '@fontsource/plus-jakarta-sans/700.css';
 
-/* ---- baked-in pitch background (self-contained) ---- */
+/* ---- baked-in pitch background ---- */
 function PitchBall({ className }) {
   return (
     <svg className={className} viewBox="0 0 200 200" aria-hidden="true">
@@ -111,10 +111,18 @@ function tierOf(stars) {
   return "rookie";
 }
 
+const COPY = {
+  elite:    { k: "The gaffer's verdict", t: "Gaffer material.", n: "You read the game like a pro. Expect me to push back hard on every call you make." },
+  sharp:    { k: "The gaffer's verdict", t: "Sharp eye.", n: "Strong start — you're a few good calls from the top table." },
+  learning: { k: "The gaffer's verdict", t: "Promising.", n: "You've got the basics. Predict well and you'll climb fast." },
+  rookie:   { k: "The gaffer's verdict", t: "Welcome, rookie.", n: "Everyone starts somewhere. I'll coach you through your picks." },
+};
+
 export default function SignupQuiz() {
   const navigate = useNavigate();
-  const { update } = useUser();
-  const [step, setStep] = useState("expertise");
+  const { update, setName } = useUser();
+  const [step, setStep] = useState("name");        // name | expertise | quiz | result
+  const [nameInput, setNameInput] = useState("");
   const [expertise, setExpertise] = useState(null);
   const [qIndex, setQIndex] = useState(0);
   const [correct, setCorrect] = useState(0);
@@ -126,15 +134,16 @@ export default function SignupQuiz() {
   const stars = Math.round((score / 20) * 2) / 2;
   const tier = tierOf(stars);
 
-  const COPY = {
-    elite:    { k: "The gaffer's verdict", t: "Gaffer material.", n: "You read the game like a pro. Expect me to push back hard on every call you make." },
-    sharp:    { k: "The gaffer's verdict", t: "Sharp eye.", n: "Strong start — you're a few good calls from the top table." },
-    learning: { k: "The gaffer's verdict", t: "Promising.", n: "You've got the basics. Predict well and you'll climb fast." },
-    rookie:   { k: "The gaffer's verdict", t: "Welcome, rookie.", n: "Everyone starts somewhere. I'll coach you through your picks." },
-  };
   const note = expertise === "expert" && stars < 3.5
     ? "You told me you knew your football. The table will be the judge of that."
     : COPY[tier].n;
+
+  function submitName() {
+    const n = nameInput.trim();
+    if (!n) return;
+    setName(n);
+    setStep("expertise");
+  }
 
   function chooseExpertise(level) { setExpertise(level); setStep("quiz"); }
 
@@ -221,6 +230,10 @@ export default function SignupQuiz() {
         .kicker{ font-size:.72rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--bright); }
         .title{ font-family:var(--display); font-weight:800; font-size:clamp(1.7rem,6vw,2.5rem); letter-spacing:-.02em;
           margin:.5rem 0 1.6rem; line-height:1.05; }
+        .nameField{ width:100%; border:1.5px solid var(--line); border-radius:14px; padding:1rem 1.1rem;
+          font-family:inherit; font-size:1.15rem; font-weight:600; color:var(--ink); background:rgba(255,255,255,.85);
+          outline:none; transition:border-color .2s; }
+        .nameField:focus{ border-color:var(--bright); }
         .choices{ display:grid; gap:1rem; }
         .choice{ text-align:left; cursor:pointer; border:1.5px solid var(--line); border-radius:18px; padding:1.3rem;
           background:rgba(255,255,255,.6); transition:all .22s cubic-bezier(.2,.8,.25,1);
@@ -256,7 +269,8 @@ export default function SignupQuiz() {
         .note{ color:var(--deep); opacity:.85; font-weight:500; max-width:36ch; margin:.6rem auto 1.6rem; line-height:1.5; }
         .cta{ border:none; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:1.05rem;
           color:#fff; background:var(--bright); padding:1rem 2rem; border-radius:999px; transition:all .2s ease; animation:glow 2.6s ease-in-out infinite; }
-        .cta:hover{ transform:translateY(-3px) scale(1.03); }
+        .cta:disabled{ opacity:.5; cursor:not-allowed; animation:none; }
+        .cta:hover:not(:disabled){ transform:translateY(-3px) scale(1.03); }
         @keyframes glow{ 0%,100%{box-shadow:0 8px 24px rgba(22,180,95,.32);} 50%{box-shadow:0 10px 38px rgba(63,224,127,.6);} }
         .cel{ position:relative; width:230px; height:170px; margin:0 auto 1rem; }
         .cel-net{ position:absolute; inset:0; width:100%; height:100%; transform-box:fill-box; transform-origin:center; animation:netRipple .55s 1.05s ease; }
@@ -293,9 +307,28 @@ export default function SignupQuiz() {
 
       <div className="stage">
         <div className="panel">
+          {step === "name" && (
+            <div className="step" key="name">
+              <div className="kicker">Welcome to Gaffer</div>
+              <h1 className="title">What should we call you?</h1>
+              <input
+                className="nameField"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') submitName(); }}
+                placeholder="Your gaffer name"
+                maxLength={20}
+                autoFocus
+              />
+              <button className="cta" style={{ marginTop: '1.4rem' }} disabled={!nameInput.trim()} onClick={submitName}>
+                Continue
+              </button>
+            </div>
+          )}
+
           {step === "expertise" && (
             <div className="step" key="expertise">
-              <div className="kicker">Step 1 of 2</div>
+              <div className="kicker">Step 2 of 3</div>
               <h1 className="title">How well do you know your football?</h1>
               <div className="choices">
                 <button className="choice" onClick={() => chooseExpertise("expert")}>
