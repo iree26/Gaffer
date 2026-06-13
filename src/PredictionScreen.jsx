@@ -8,6 +8,7 @@ import '@fontsource/plus-jakarta-sans/500.css';
 import '@fontsource/plus-jakarta-sans/600.css';
 import '@fontsource/plus-jakarta-sans/700.css';
 import Avatar from './Avatar';
+import Logo from './Logo';
 
 
 function PitchBall({ className }) {
@@ -346,7 +347,7 @@ export default function PredictionScreen() {
             <Avatar size={32} />
         </div>
         <div className="toprow">
-          <div className="logo" onClick={() => navigate('/')}>GAFF<span>ER</span></div>
+          <Logo />
           <div className="topnav">
             <span className="count"><b>{done}</b>/{GROUPS.length} called</span>
             <span className="tablelink" onClick={() => navigate('/leaderboard')}>Table →</span>

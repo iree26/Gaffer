@@ -5,6 +5,8 @@ import '@fontsource/syne/800.css';
 import '@fontsource/plus-jakarta-sans/500.css';
 import '@fontsource/plus-jakarta-sans/600.css';
 import '@fontsource/plus-jakarta-sans/700.css';
+import Logo from './Logo';
+
 
 /* ---- baked-in pitch background ---- */
 function PitchBall({ className }) {
@@ -198,7 +200,7 @@ export default function Leaderboard() {
       `}</style>
 
       <div className="topbar">
-        <span className="logo" onClick={() => navigate('/')}>GAFF<span>ER</span></span>
+        <Logo />
         <span className="nav" onClick={() => navigate('/predict')}>Predictions →</span>
       </div>
 
