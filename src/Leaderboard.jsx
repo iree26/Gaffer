@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from './UserContext';
 import { api } from './api';
-import Avatar from './Avatar';
+import Navbar from './Navbar';
 import '@fontsource/syne/700.css';
 import '@fontsource/syne/800.css';
 import '@fontsource/plus-jakarta-sans/500.css';
@@ -65,7 +65,6 @@ function PitchBg() {
   );
 }
 
-// fallback if the server is unreachable
 const FALLBACK_TOP = [
   { rank: 1, displayName: "adrian_picks", displayStars: 5.0 },
   { rank: 2, displayName: "thegaffer_og", displayStars: 4.5 },
@@ -92,13 +91,11 @@ function Stars({ value = 0 }) {
     </span>
   );
 }
-
 function ballColor(name) {
   const n = name || "?";
   const h = Math.abs([...n].reduce((a, ch) => ch.charCodeAt(0) + ((a << 5) - a), 0)) % 360;
   return `hsl(${h} 55% 42%)`;
 }
-
 function Row({ p, you }) {
   return (
     <div className={`row${you ? " you" : ""}`}>
@@ -113,7 +110,6 @@ function Row({ p, you }) {
 export default function Leaderboard() {
   const navigate = useNavigate();
   const { user } = useUser();
-
   const [top, setTop] = useState(null);
   const [bottom, setBottom] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -125,20 +121,12 @@ export default function Leaderboard() {
         setTop(data.top || FALLBACK_TOP);
         setBottom(data.bottom || FALLBACK_BOTTOM);
       } catch (e) {
-        setTop(FALLBACK_TOP);
-        setBottom(FALLBACK_BOTTOM);
-      } finally {
-        setLoading(false);
-      }
+        setTop(FALLBACK_TOP); setBottom(FALLBACK_BOTTOM);
+      } finally { setLoading(false); }
     })();
   }, []);
 
-  const YOU = {
-    rank: user.rank ?? 248,
-    displayName: `${user.displayName} (you)`,
-    displayStars: user.displayStars || 0,
-  };
-
+  const YOU = { rank: user.rank ?? 248, displayName: `${user.displayName} (you)`, displayStars: user.displayStars || 0 };
   const list = top || [];
   const podium = list.slice(0, 3);
   const rest = list.slice(3);
@@ -146,21 +134,15 @@ export default function Leaderboard() {
   return (
     <div className="gaffer-app">
       <PitchBg />
+      <Navbar />
       <style>{`
         .gaffer-app{
-          --ink:#0B6B3A; --deep:#075E32; --bright:#16B45F; --lime:#3FE07F;
-          --line:rgba(11,107,58,.14); --soft:#F3FAF5; --down:#D6553F;
+          --ink:#0B6B3A; --deep:#075E32; --bright:#16B45F; --lime:#3FE07F; --line:rgba(11,107,58,.14); --soft:#F3FAF5;
           --display:'Syne','Plus Jakarta Sans',sans-serif;
           position:relative; isolation:isolate; min-height:100svh; width:100%; background:transparent; color:var(--ink);
           font-family:'Plus Jakarta Sans',system-ui,sans-serif; padding-bottom:4rem;
         }
-        .topbar{ position:sticky; top:0; z-index:20; display:flex; align-items:center; justify-content:space-between;
-          background:rgba(255,255,255,.85); backdrop-filter:blur(12px); border-bottom:1px solid var(--line); padding:.85rem clamp(1rem,5vw,3rem); }
-        .logo{ font-family:var(--display); font-weight:800; font-size:1.3rem; color:var(--deep); cursor:pointer; }
-        .logo span{ color:var(--bright); }
-        .right{ display:flex; align-items:center; gap:1.1rem; }
-        .nav{ font-weight:700; font-size:.85rem; color:var(--bright); cursor:pointer; }
-        .wrap{ position:relative; z-index:1; max-width:720px; margin:0 auto; padding:clamp(1.4rem,5vw,2.5rem) clamp(1rem,5vw,2rem) 0; }
+        .wrap{ position:relative; z-index:1; max-width:720px; margin:0 auto; padding:0 clamp(1rem,5vw,2rem); }
         .h{ font-family:var(--display); font-weight:800; font-size:clamp(1.8rem,6vw,2.7rem); letter-spacing:-.02em; margin:0; animation:fadeUp .6s both; }
         .hsub{ margin:.5rem 0 1.8rem; color:var(--deep); opacity:.8; font-weight:500; animation:fadeUp .6s .08s both; }
         @keyframes fadeUp{ from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:none;} }
@@ -198,14 +180,6 @@ export default function Leaderboard() {
         @media (prefers-reduced-motion: reduce){ .h,.hsub,.pod,.row{ animation:none !important; opacity:1 !important; transform:none !important; } .pod.first .medal{ animation:none !important; } }
       `}</style>
 
-      <div className="topbar">
-        <span className="logo" onClick={() => navigate('/')}>GAFF<span>ER</span></span>
-        <div className="right">
-          <span className="nav" onClick={() => navigate('/predict')}>Predictions →</span>
-          <Avatar size={32} />
-        </div>
-      </div>
-
       <main className="wrap">
         <h1 className="h">The table</h1>
         <p className="hsub">Stars are earned, not claimed. Climb by calling it right.</p>
@@ -225,13 +199,11 @@ export default function Leaderboard() {
                 ))}
               </div>
             )}
-
             <div className="section-label">Top callers</div>
             <div className="list">
               {rest.map((p) => <Row key={p.rank} p={p} />)}
               <Row p={YOU} you />
             </div>
-
             <div className="section-label">Bottom of the table</div>
             <div className="list">
               {(bottom || []).map((p) => <Row key={p.rank} p={p} />)}

@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useUser } from './UserContext';
 import { api } from './api';
-import Avatar from './Avatar';
+import Navbar from './Navbar';
 import '@fontsource/syne/700.css';
 import '@fontsource/syne/800.css';
 import '@fontsource/plus-jakarta-sans/500.css';
 import '@fontsource/plus-jakarta-sans/600.css';
 import '@fontsource/plus-jakarta-sans/700.css';
 
-/* ---- baked-in pitch background ---- */
 function PitchBall({ className }) {
   return (
     <svg className={className} viewBox="0 0 200 200" aria-hidden="true">
@@ -77,7 +75,6 @@ function Stars({ value = 0 }) {
     </span>
   );
 }
-
 function timeAgo(iso) {
   if (!iso) return "";
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -86,11 +83,14 @@ function timeAgo(iso) {
   if (s < 86400) return `${Math.floor(s/3600)}h`;
   return `${Math.floor(s/86400)}d`;
 }
+function ballColor(name) {
+  const n = name || "?";
+  const h = Math.abs([...n].reduce((a, ch) => ch.charCodeAt(0) + ((a << 5) - a), 0)) % 360;
+  return `hsl(${h} 55% 42%)`;
+}
 
 export default function Comments() {
-  const navigate = useNavigate();
   const { user } = useUser();
-
   const [markets, setMarkets] = useState([]);
   const [activeId, setActiveId] = useState(null);
   const [comments, setComments] = useState([]);
@@ -100,7 +100,6 @@ export default function Comments() {
   const [posting, setPosting] = useState(false);
   const [err, setErr] = useState(null);
 
-  // load markets once
   useEffect(() => {
     (async () => {
       try {
@@ -110,13 +109,10 @@ export default function Comments() {
         if (list.length) setActiveId(list[0].id);
       } catch (e) {
         setErr("Couldn't reach the server. It may be waking up — try again in a moment.");
-      } finally {
-        setLoadingMarkets(false);
-      }
+      } finally { setLoadingMarkets(false); }
     })();
   }, []);
 
-  // load comments whenever the active market changes
   useEffect(() => {
     if (!activeId) return;
     setLoadingComments(true);
@@ -124,11 +120,8 @@ export default function Comments() {
       try {
         const data = await api.getComments(activeId);
         setComments(data.comments || data || []);
-      } catch (e) {
-        setComments([]);
-      } finally {
-        setLoadingComments(false);
-      }
+      } catch (e) { setComments([]); }
+      finally { setLoadingComments(false); }
     })();
   }, [activeId]);
 
@@ -136,22 +129,15 @@ export default function Comments() {
     const t = text.trim();
     if (!t || posting || !activeId) return;
     setPosting(true);
-    // optimistic add so it feels instant
-    const optimistic = {
-      userId: user.displayName, displayName: user.displayName,
-      displayStars: user.displayStars, text: t, createdAt: new Date().toISOString(), _local: true,
-    };
+    const optimistic = { userId: user.displayName, displayName: user.displayName, displayStars: user.displayStars, text: t, createdAt: new Date().toISOString(), _local: true };
     setComments((c) => [...c, optimistic]);
     setText("");
     try {
       await api.postComment(activeId, user.displayName, t);
-      const data = await api.getComments(activeId);  // refresh with the real stored copy
+      const data = await api.getComments(activeId);
       setComments(data.comments || data || []);
-    } catch (e) {
-      setErr("That comment didn't send — server may be waking up.");
-    } finally {
-      setPosting(false);
-    }
+    } catch (e) { setErr("That comment didn't send — server may be waking up."); }
+    finally { setPosting(false); }
   }
 
   const activeMarket = markets.find((m) => m.id === activeId);
@@ -159,26 +145,17 @@ export default function Comments() {
   return (
     <div className="gaffer-app">
       <PitchBg />
+      <Navbar />
       <style>{`
         .gaffer-app{
-          --ink:#0B6B3A; --deep:#075E32; --bright:#16B45F; --lime:#3FE07F;
-          --line:rgba(11,107,58,.14); --soft:#F3FAF5;
+          --ink:#0B6B3A; --deep:#075E32; --bright:#16B45F; --lime:#3FE07F; --line:rgba(11,107,58,.14); --soft:#F3FAF5;
           --display:'Syne','Plus Jakarta Sans',sans-serif;
           position:relative; isolation:isolate; min-height:100svh; width:100%; background:transparent; color:var(--ink);
           font-family:'Plus Jakarta Sans',system-ui,sans-serif; padding-bottom:6rem;
         }
-        .topbar{ position:sticky; top:0; z-index:20; display:flex; align-items:center; justify-content:space-between;
-          background:rgba(255,255,255,.85); backdrop-filter:blur(12px); border-bottom:1px solid var(--line);
-          padding:.85rem clamp(1rem,5vw,3rem); }
-        .logo{ font-family:var(--display); font-weight:800; font-size:1.3rem; color:var(--deep); cursor:pointer; }
-        .logo span{ color:var(--bright); }
-        .right{ display:flex; align-items:center; gap:1.1rem; }
-        .nav{ font-weight:700; font-size:.85rem; color:var(--bright); cursor:pointer; }
-
-        .wrap{ position:relative; z-index:1; max-width:680px; margin:0 auto; padding:clamp(1.4rem,5vw,2.2rem) clamp(1rem,5vw,1.6rem) 0; }
+        .wrap{ position:relative; z-index:1; max-width:680px; margin:0 auto; padding:0 clamp(1rem,5vw,1.6rem); }
         .h{ font-family:var(--display); font-weight:800; font-size:clamp(1.7rem,6vw,2.5rem); letter-spacing:-.02em; margin:0; }
         .hsub{ margin:.4rem 0 1.2rem; color:var(--deep); opacity:.8; font-weight:500; }
-
         .chips{ display:flex; gap:.5rem; overflow-x:auto; padding:.2rem 0 1rem; scrollbar-width:none; }
         .chips::-webkit-scrollbar{ display:none; }
         .chip{ flex:none; cursor:pointer; border:1.5px solid var(--line); background:rgba(255,255,255,.7);
@@ -186,7 +163,6 @@ export default function Comments() {
           white-space:nowrap; transition:all .18s ease; }
         .chip:hover{ border-color:var(--bright); }
         .chip.on{ background:var(--bright); border-color:var(--bright); color:#fff; }
-
         .thread{ display:flex; flex-direction:column; gap:.7rem; min-height:30vh; }
         .empty,.loading{ text-align:center; color:var(--deep); opacity:.65; font-weight:600; padding:2.5rem 1rem; }
         .cmt{ display:flex; gap:.7rem; background:rgba(255,255,255,.78); backdrop-filter:blur(8px);
@@ -203,27 +179,19 @@ export default function Comments() {
         .cstars .s.half{ background:linear-gradient(90deg,var(--bright) 50%,var(--line) 50%); -webkit-background-clip:text; background-clip:text; color:transparent; }
         .ctime{ font-size:.72rem; color:var(--deep); opacity:.55; font-weight:600; }
         .ctext{ font-size:.95rem; font-weight:500; color:var(--deep); line-height:1.45; word-wrap:break-word; }
-
-        .composer{ position:fixed; left:0; right:0; bottom:0; z-index:30; display:flex; gap:.6rem; align-items:center;
-          padding:.9rem clamp(1rem,5vw,3rem); background:rgba(255,255,255,.92); backdrop-filter:blur(12px); border-top:1px solid var(--line); }
-        .composer .field{ flex:1; border:1.5px solid var(--line); border-radius:999px; padding:.8rem 1.1rem;
-          font-family:inherit; font-size:1rem; font-weight:500; color:var(--ink); background:#fff; outline:none; transition:border-color .2s; }
-        .composer .field:focus{ border-color:var(--bright); }
+        .composer{ position:fixed; left:50%; transform:translateX(-50%); bottom:14px; z-index:30; width:min(680px, calc(100% - 20px));
+          display:flex; gap:.6rem; align-items:center; padding:.6rem .7rem .6rem 1rem;
+          background:rgba(255,255,255,.78); backdrop-filter:blur(16px); border:1px solid var(--line); border-radius:20px; box-shadow:0 14px 44px rgba(7,94,50,.18); }
+        .composer .field{ flex:1; border:none; background:transparent; padding:.55rem .2rem;
+          font-family:inherit; font-size:1rem; font-weight:500; color:var(--ink); outline:none; }
+        .composer .field::placeholder{ color:var(--deep); opacity:.5; }
         .composer .send{ flex:none; border:none; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; font-weight:800;
-          color:#fff; background:var(--bright); padding:.8rem 1.3rem; border-radius:999px; transition:all .18s ease; }
-        .composer .send:disabled{ opacity:.5; cursor:not-allowed; }
-        .composer .send:hover:not(:disabled){ transform:translateY(-2px); }
+          color:#fff; background:var(--bright); padding:.7rem 1.25rem; border-radius:999px; transition:all .18s ease; }
+        .composer .send:disabled{ opacity:.45; cursor:not-allowed; }
+        .composer .send:hover:not(:disabled){ transform:translateY(-2px); box-shadow:0 8px 22px rgba(22,180,95,.45); }
         .errbar{ background:rgba(214,85,63,.1); border:1px solid rgba(214,85,63,.3); color:#A8392A; font-weight:600;
           border-radius:12px; padding:.7rem 1rem; margin-bottom:1rem; font-size:.9rem; }
       `}</style>
-
-      <div className="topbar">
-        <span className="logo" onClick={() => navigate('/')}>GAFF<span>ER</span></span>
-        <div className="right">
-          <span className="nav" onClick={() => navigate('/predict')}>Predictions →</span>
-          <Avatar size={32} />
-        </div>
-      </div>
 
       <main className="wrap">
         <h1 className="h">The terraces</h1>
@@ -251,7 +219,7 @@ export default function Comments() {
               ) : (
                 comments.map((c, i) => (
                   <div className="cmt" key={c.id || i}>
-                    <span className="cav" style={{ background: 'hsl(' + (Math.abs([...(c.displayName||c.userId||'?')].reduce((a,ch)=>ch.charCodeAt(0)+((a<<5)-a),0))%360) + ' 55% 42%)' }}>⚽</span>
+                    <span className="cav" style={{ background: ballColor(c.displayName || c.userId) }}>⚽</span>
                     <div className="cbody">
                       <div className="cmeta">
                         <span className="cname">{c.displayName || c.userId}</span>

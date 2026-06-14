@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from './UserContext';
 import { api } from './api';
+import Navbar from './Navbar';
 import 'flag-icons/css/flag-icons.min.css';
 import '@fontsource/syne/700.css';
 import '@fontsource/syne/800.css';
@@ -71,7 +72,6 @@ function PitchBg() {
   );
 }
 
-// fallback groups + results, used only if /markets can't be reached
 const FALLBACK_GROUPS = [
   { id: "m_grpA", category: "GROUP_WINNER", title: "Group A", options: [
     {id:"a0",label:"Mexico",flag:"mx"},{id:"a1",label:"S. Korea",flag:"kr"},{id:"a2",label:"S. Africa",flag:"za"},{id:"a3",label:"Czechia",flag:"cz"}] },
@@ -85,16 +85,15 @@ export default function PredictionScreen() {
 
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [picks, setPicks] = useState({});            // marketId -> optionId
-  const [pickIndex, setPickIndex] = useState({});    // marketId -> option index (for verdict/rewind logic)
-  const [agentReplies, setAgentReplies] = useState({}); // marketId -> { text, loading }
+  const [picks, setPicks] = useState({});
+  const [pickIndex, setPickIndex] = useState({});
+  const [agentReplies, setAgentReplies] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [phase, setPhase] = useState(null);
   const [verdict, setVerdict] = useState(null);
   const [revealed, setRevealed] = useState(0);
   const [outcome, setOutcome] = useState(null);
 
-  // load real markets
   useEffect(() => {
     (async () => {
       try {
@@ -123,7 +122,7 @@ export default function PredictionScreen() {
       setAgentReplies((r) => ({ ...r, [market.id]: { text: res.agentReply || res.reply || "", loading: false } }));
       if (res.user) update({ displayStars: res.user.displayStars ?? user.displayStars, rank: res.user.rank ?? user.rank });
     } catch (e) {
-      setAgentReplies((r) => ({ ...r, [market.id]: { text: "", loading: false } })); // silent — pick still stands
+      setAgentReplies((r) => ({ ...r, [market.id]: { text: "", loading: false } }));
     }
   }
 
@@ -156,13 +155,12 @@ export default function PredictionScreen() {
     setTimeout(() => setPhase("verdict"), 1700);
   }
 
-  // MOCK rewind — stays local until the ML guy ships a resolve endpoint
   function startRewind() {
     const hits = {};
     let correct = 0;
     groups.forEach((g, i) => {
       const ti = pickIndex[g.id];
-      const winningIndex = i % 3 === 0 ? ti : (ti === 0 ? 1 : 0); // pseudo result for demo
+      const winningIndex = i % 3 === 0 ? ti : (ti === 0 ? 1 : 0);
       const h = ti === winningIndex; hits[g.id] = { hit: h, winnerLabel: g.options[winningIndex]?.label };
       if (h) correct++;
     });
@@ -206,6 +204,7 @@ export default function PredictionScreen() {
   return (
     <div className="gaffer-app">
       <PitchBg />
+      <Navbar />
       <style>{`
         .gaffer-app{
           --ink:#0B6B3A; --deep:#075E32; --bright:#16B45F; --lime:#3FE07F; --down:#D6553F;
@@ -214,21 +213,13 @@ export default function PredictionScreen() {
           position:relative; isolation:isolate; min-height:100svh; width:100%; background:transparent; color:var(--ink);
           font-family:'Plus Jakarta Sans',system-ui,sans-serif; padding-bottom:7rem;
         }
-        .topbar{ position:sticky; top:0; z-index:20; background:rgba(255,255,255,.82); backdrop-filter:blur(12px);
-          border-bottom:1px solid var(--line); padding:.85rem clamp(1rem,5vw,3rem); }
-        .toprow{ display:flex; align-items:center; justify-content:space-between; gap:1rem; }
-        .logo{ font-family:var(--display); font-weight:800; font-size:1.3rem; color:var(--deep); cursor:pointer; }
-        .logo span{ color:var(--bright); }
-        .topnav{ display:flex; align-items:center; gap:1.1rem; }
-        .count{ font-weight:700; font-size:.85rem; color:var(--deep); } .count b{ color:var(--bright); }
-        .tablelink{ font-weight:700; font-size:.85rem; color:var(--bright); cursor:pointer; }
-        .bar{ height:7px; background:var(--soft); border-radius:999px; overflow:hidden; margin-top:.6rem; }
-        .bar-fill{ height:100%; border-radius:999px; background:linear-gradient(90deg,var(--bright),var(--lime)); width:0%; transition:width .55s cubic-bezier(.2,.8,.25,1); }
-        .bar-fill.full{ background-size:200% 100%; animation:shimmer 1.6s linear infinite; }
-        @keyframes shimmer{ to{ background-position:200% 0; } }
-        .wrap{ position:relative; z-index:1; max-width:880px; margin:0 auto; padding:clamp(1.4rem,5vw,2.5rem) clamp(1rem,5vw,2rem) 0; }
+        .wrap{ position:relative; z-index:1; max-width:880px; margin:0 auto; padding:0 clamp(1rem,5vw,2rem); }
         .h{ font-family:var(--display); font-weight:800; font-size:clamp(1.8rem,6vw,2.7rem); letter-spacing:-.02em; margin:0; }
-        .hsub{ margin:.5rem 0 1.6rem; color:var(--deep); opacity:.8; font-weight:500; }
+        .hsub{ margin:.5rem 0 1.2rem; color:var(--deep); opacity:.8; font-weight:500; }
+        .pbar{ height:7px; background:rgba(11,107,58,.08); border-radius:999px; overflow:hidden; margin:0 0 .5rem; }
+        .pbar i{ display:block; height:100%; border-radius:999px; background:linear-gradient(90deg,var(--bright),var(--lime)); transition:width .55s cubic-bezier(.2,.8,.25,1); }
+        .pcount{ margin:0 0 1.4rem; font-weight:700; font-size:.85rem; color:var(--deep); }
+        .pcount b{ color:var(--bright); }
         .grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:1rem; perspective:1200px; }
         .card{ border:1px solid var(--line); border-radius:18px; padding:1rem; background:rgba(255,255,255,.82);
           backdrop-filter:blur(8px); box-shadow:0 4px 20px rgba(7,94,50,.06); transition:box-shadow .22s ease, transform .22s ease, background .3s; }
@@ -261,10 +252,11 @@ export default function PredictionScreen() {
         .agent .atext{ font-size:.82rem; font-weight:600; color:var(--deep); line-height:1.4; }
         .agent .atext i{ animation:blink 1.2s infinite; font-style:normal; } .agent .atext i:nth-child(2){animation-delay:.2s;} .agent .atext i:nth-child(3){animation-delay:.4s;}
         @keyframes blink{0%,100%{opacity:.2;}50%{opacity:1;}}
-        .submitbar{ position:fixed; left:0; right:0; bottom:0; z-index:30; display:flex; align-items:center; justify-content:space-between;
-          gap:1rem; padding:1rem clamp(1rem,5vw,3rem); background:rgba(255,255,255,.9); backdrop-filter:blur(12px); border-top:1px solid var(--line); }
-        .submit-label{ font-weight:700; font-size:.9rem; color:var(--deep); } .submit-label b{ color:var(--bright); }
-        .submit{ border:none; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:1rem; color:#fff; background:var(--line); padding:.85rem 1.6rem; border-radius:999px; transition:all .25s ease; }
+        .submitbar{ position:fixed; left:50%; transform:translateX(-50%); bottom:14px; z-index:30; width:min(720px, calc(100% - 20px));
+          display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.8rem 1rem .8rem 1.3rem;
+          background:rgba(255,255,255,.78); backdrop-filter:blur(16px); border:1px solid var(--line); border-radius:20px; box-shadow:0 14px 44px rgba(7,94,50,.18); }
+        .submit-label{ font-weight:700; font-size:.88rem; color:var(--deep); } .submit-label b{ color:var(--bright); }
+        .submit{ border:none; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:1rem; color:#fff; background:rgba(11,107,58,.25); padding:.8rem 1.5rem; border-radius:999px; transition:all .25s ease; }
         .submit.ready{ background:var(--bright); animation:pulse 2.4s ease-in-out infinite; } .submit.ready:hover{ transform:translateY(-2px) scale(1.03); } .submit.locked{ background:var(--deep); animation:none; }
         @keyframes pulse{ 0%,100%{ box-shadow:0 6px 20px rgba(22,180,95,.3);} 50%{ box-shadow:0 8px 34px rgba(63,224,127,.65);} }
         .vbackdrop{ position:fixed; inset:0; z-index:40; display:flex; align-items:center; justify-content:center; padding:1.2rem; background:rgba(236,248,239,.72); backdrop-filter:blur(10px); animation:vfade .4s; }
@@ -293,19 +285,9 @@ export default function PredictionScreen() {
         @media (max-width:560px){ .teams{ gap:.4rem; } .team-name{ font-size:.74rem; } }
       `}</style>
 
-      <div className="topbar">
-        <div className="toprow">
-          <div className="logo" onClick={() => navigate('/')}>GAFF<span>ER</span></div>
-          <div className="topnav">
-            <span className="count"><b>{done}</b>/{groups.length} called</span>
-            <span className="tablelink" onClick={() => navigate('/talk')}>Terraces →</span>
-            <span className="tablelink" onClick={() => navigate('/leaderboard')}>Table →</span>
-          </div>
-        </div>
-        <div className="bar"><div className={`bar-fill${complete ? " full" : ""}`} style={{ width: `${(done / groups.length) * 100}%` }} /></div>
-      </div>
-
       <main className="wrap">
+        <div className="pbar"><i style={{ width: `${(done / groups.length) * 100}%` }} /></div>
+        <p className="pcount"><b>{done}</b>/{groups.length} groups called</p>
         <h1 className="h">Call your group winners</h1>
         <p className="hsub">Pick who tops each group. The gaffer reacts to every call.</p>
         <div className="grid">
