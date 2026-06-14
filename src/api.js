@@ -39,4 +39,7 @@ export const api = {
                     req(`/markets/${marketId}/comments`, { method: 'POST', body: JSON.stringify({ userId, text }) }),
   getLeaderboard: ()                => req('/leaderboard'),
   getUser:        (userId)          => req(`/user/${userId}`),
+  getComments:    (marketId)        => req(`/markets/${marketId}/comments`),
+  postComment:    (marketId, userId, text) =>
+                    req(`/markets/${marketId}/comments`, { method: 'POST', body: JSON.stringify({ userId, text }) }),
 };
