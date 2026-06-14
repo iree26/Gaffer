@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from './UserContext';
+import { api, letterFor, knowledgeRating } from './api';
 import '@fontsource/syne/700.css';
 import '@fontsource/syne/800.css';
 import '@fontsource/plus-jakarta-sans/500.css';
@@ -112,27 +113,31 @@ function tierOf(stars) {
 }
 
 const COPY = {
-  elite:    { k: "The gaffer's verdict", t: "Gaffer material.", n: "You read the game like a pro. Expect me to push back hard on every call you make." },
-  sharp:    { k: "The gaffer's verdict", t: "Sharp eye.", n: "Strong start — you're a few good calls from the top table." },
-  learning: { k: "The gaffer's verdict", t: "Promising.", n: "You've got the basics. Predict well and you'll climb fast." },
-  rookie:   { k: "The gaffer's verdict", t: "Welcome, rookie.", n: "Everyone starts somewhere. I'll coach you through your picks." },
+  elite:    { t: "Gaffer material.", n: "You read the game like a pro. Expect me to push back hard on every call you make." },
+  sharp:    { t: "Sharp eye.", n: "Strong start — you're a few good calls from the top table." },
+  learning: { t: "Promising.", n: "You've got the basics. Predict well and you'll climb fast." },
+  rookie:   { t: "Welcome, rookie.", n: "Everyone starts somewhere. I'll coach you through your picks." },
 };
 
 export default function SignupQuiz() {
   const navigate = useNavigate();
-  const { update, setName } = useUser();
-  const [step, setStep] = useState("name");        // name | expertise | quiz | result
+  const { user, update, setName } = useUser();
+  const [step, setStep] = useState("name");        // name | expertise | quiz | submitting | result
   const [nameInput, setNameInput] = useState("");
   const [expertise, setExpertise] = useState(null);
   const [qIndex, setQIndex] = useState(0);
   const [correct, setCorrect] = useState(0);
+  const [answersLog, setAnswersLog] = useState([]);   // letters, to send to backend
   const [selected, setSelected] = useState(null);
   const [locking, setLocking] = useState(false);
   const [shown, setShown] = useState(0);
 
-  const score = Math.round((correct / QUESTIONS.length) * 100);
-  const stars = Math.round((score / 20) * 2) / 2;
+  // local score for the instant animation; backend result overrides if it comes back
+  const localScore = Math.round((correct / QUESTIONS.length) * 100);
+  const [score, setScore] = useState(0);
+  const stars = Math.round((score / 20) * 2) / 2 || 0.5;
   const tier = tierOf(stars);
+  const rating = knowledgeRating(score);
 
   const note = expertise === "expert" && stars < 3.5
     ? "You told me you knew your football. The table will be the judge of that."
@@ -144,7 +149,6 @@ export default function SignupQuiz() {
     setName(n);
     setStep("expertise");
   }
-
   function chooseExpertise(level) { setExpertise(level); setStep("quiz"); }
 
   function answer(idx) {
@@ -152,11 +156,33 @@ export default function SignupQuiz() {
     setSelected(idx);
     setLocking(true);
     const isRight = idx === QUESTIONS[qIndex].answer;
+    const letter = letterFor(idx);
     setTimeout(() => {
       if (isRight) setCorrect((c) => c + 1);
-      if (qIndex + 1 < QUESTIONS.length) { setQIndex((i) => i + 1); setSelected(null); setLocking(false); }
-      else { setStep("result"); }
+      const log = [...answersLog, letter];
+      setAnswersLog(log);
+      if (qIndex + 1 < QUESTIONS.length) {
+        setQIndex((i) => i + 1); setSelected(null); setLocking(false);
+      } else {
+        finishQuiz(log);
+      }
     }, 360);
+  }
+
+  async function finishQuiz(log) {
+    setStep("submitting");
+    const localPct = Math.round((correct + (selected === QUESTIONS[qIndex].answer ? 1 : 0)) / QUESTIONS.length * 100);
+    try {
+      await api.submitQuiz(user.displayName, expertise, log);
+      const result = await api.getQuizResult(user.displayName);
+      // use backend score if present, else fall back to local
+      const backendPct = result?.score ?? result?.percentage ?? localPct;
+      setScore(backendPct);
+    } catch (e) {
+      // backend asleep or error — never block the demo
+      setScore(localPct);
+    }
+    setStep("result");
   }
 
   useEffect(() => {
@@ -257,7 +283,13 @@ export default function SignupQuiz() {
         .opt:hover:not(.sel){ border-color:var(--bright); transform:translateY(-2px); }
         .opt.sel{ background:var(--bright); border-color:var(--bright); color:#fff; transform:translateY(-2px);
           box-shadow:0 8px 22px rgba(22,180,95,.4); }
+        .submitting{ text-align:center; }
+        .submitting .v-ball{ width:78px; height:78px; margin:0 auto 1rem; display:block; animation:spin 2.4s linear infinite; }
+        .submitting p{ font-family:var(--display); font-weight:800; font-size:1.1rem; color:var(--ink); }
         .result{ text-align:center; }
+        .ratingpill{ display:inline-flex; align-items:center; gap:.4rem; font-weight:800; font-size:.8rem;
+          letter-spacing:.04em; color:var(--deep); background:var(--soft); border:1px solid var(--line);
+          padding:.35rem .8rem; border-radius:999px; margin-bottom:.6rem; }
         .score-num{ font-family:var(--display); font-weight:800; font-size:clamp(3rem,14vw,4.6rem); line-height:1; color:var(--deep); }
         .score-num small{ font-size:.35em; opacity:.5; font-weight:700; }
         .rtitle{ font-family:var(--display); font-weight:800; font-size:clamp(1.5rem,5vw,2.1rem); margin:.3rem 0 .2rem; color:var(--ink); }
@@ -272,6 +304,7 @@ export default function SignupQuiz() {
         .cta:disabled{ opacity:.5; cursor:not-allowed; animation:none; }
         .cta:hover:not(:disabled){ transform:translateY(-3px) scale(1.03); }
         @keyframes glow{ 0%,100%{box-shadow:0 8px 24px rgba(22,180,95,.32);} 50%{box-shadow:0 10px 38px rgba(63,224,127,.6);} }
+        @keyframes spin{ to{ transform:rotate(360deg); } }
         .cel{ position:relative; width:230px; height:170px; margin:0 auto 1rem; }
         .cel-net{ position:absolute; inset:0; width:100%; height:100%; transform-box:fill-box; transform-origin:center; animation:netRipple .55s 1.05s ease; }
         @keyframes netRipple{ 0%,100%{ transform:scale(1); } 45%{ transform:scale(1.04,1.06); } }
@@ -286,7 +319,6 @@ export default function SignupQuiz() {
         }
         .cel.burst{ display:flex; align-items:center; justify-content:center; }
         .cel-ball-spin{ width:90px; height:90px; animation:spin 5s linear infinite; }
-        @keyframes spin{ to{ transform:rotate(360deg); } }
         .spark{ position:absolute; left:50%; top:50%; color:var(--bright); font-size:1.3rem; opacity:0;
           transform:translate(-50%,-50%) rotate(var(--a)) translateY(0); animation:spark .8s forwards ease-out; }
         @keyframes spark{ 0%{opacity:0; transform:translate(-50%,-50%) rotate(var(--a)) translateY(0) scale(.3);}
@@ -298,7 +330,7 @@ export default function SignupQuiz() {
           background:rgba(11,107,58,.18); border-radius:50%; filter:blur(3px); }
         @media (prefers-reduced-motion: reduce){
           .step,.choice,.opt,.star,.cta{ animation:none !important; opacity:1 !important; transform:none !important; }
-          .cel-ball-shot,.cel-net,.spark,.cel-ball-bounce,.cel-ball-spin{ animation:none !important; }
+          .cel-ball-shot,.cel-net,.spark,.cel-ball-bounce,.cel-ball-spin,.v-ball{ animation:none !important; }
           .fill{ transition:none !important; }
         }
       `}</style>
@@ -311,18 +343,9 @@ export default function SignupQuiz() {
             <div className="step" key="name">
               <div className="kicker">Welcome to Gaffer</div>
               <h1 className="title">What should we call you?</h1>
-              <input
-                className="nameField"
-                value={nameInput}
-                onChange={(e) => setNameInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') submitName(); }}
-                placeholder="Your gaffer name"
-                maxLength={20}
-                autoFocus
-              />
-              <button className="cta" style={{ marginTop: '1.4rem' }} disabled={!nameInput.trim()} onClick={submitName}>
-                Continue
-              </button>
+              <input className="nameField" value={nameInput} onChange={(e) => setNameInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') submitName(); }} placeholder="Your gaffer name" maxLength={20} autoFocus />
+              <button className="cta" style={{ marginTop: '1.4rem' }} disabled={!nameInput.trim()} onClick={submitName}>Continue</button>
             </div>
           )}
 
@@ -358,10 +381,17 @@ export default function SignupQuiz() {
             </div>
           )}
 
+          {step === "submitting" && (
+            <div className="step submitting" key="submitting">
+              <PitchBall className="v-ball" />
+              <p>The gaffer's marking your answers…</p>
+            </div>
+          )}
+
           {step === "result" && (
             <div className="step result" key="result">
               <Celebration />
-              <div className="kicker">{COPY[tier].k}</div>
+              <div className="ratingpill">{rating.emoji} {rating.label}</div>
               <h1 className="rtitle">{COPY[tier].t}</h1>
               <div className="score-num">{shown}<small>/100</small></div>
               <div className="stars-row">
