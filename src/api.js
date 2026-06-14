@@ -43,3 +43,10 @@ export const api = {
   postComment:    (marketId, userId, text) =>
                     req(`/markets/${marketId}/comments`, { method: 'POST', body: JSON.stringify({ userId, text }) }),
 };
+// fire-and-forget: wakes the server so the first real call isn't slow
+export function warmServer() {
+  fetch(`${BASE}/health`).catch(() => {
+    // health route might differ; fall back to markets, still wakes it
+    fetch(`${BASE}/markets`).catch(() => {});
+  });
+}
