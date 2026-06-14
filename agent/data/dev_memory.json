@@ -1,0 +1,124 @@
+{
+  "demo_user": {
+    "nation": "Morocco",
+    "language": "fr",
+    "quiz_completed": true,
+    "user_id": "demo_user",
+    "last_updated": "2026-06-11T04:17:02.487570+00:00",
+    "quiz_score": 85,
+    "stars": 4.0,
+    "star_label": "Expert",
+    "star_history": [
+      {
+        "stars": 4.0,
+        "reason": "Quiz completed with score 85",
+        "timestamp": "2026-06-11T04:16:57.907730+00:00"
+      }
+    ],
+    "predictions": [
+      {
+        "id": "4c08fd8b-f248-4cf5-9e16-0d3ebc33d659",
+        "match": "Morocco vs Portugal",
+        "prediction": "Morocco",
+        "confidence": "medium",
+        "reasoning": "Home crowd advantage. Strong defence. Portugal inconsistent.",
+        "timestamp": "2026-06-11T04:17:02.487539+00:00",
+        "outcome": "pending"
+      }
+    ]
+  },
+  "test_user": {
+    "last_seen": "2026-06-12T08:49:15.226322+00:00",
+    "user_id": "test_user",
+    "last_updated": "2026-06-12T08:49:15.226412+00:00"
+  },
+  "smoke_test_1": {
+    "last_seen": "2026-06-13T07:44:26.405646+00:00",
+    "user_id": "smoke_test_1",
+    "last_updated": "2026-06-13T07:44:26.405786+00:00"
+  },
+  "smoke_test_2": {
+    "last_seen": "2026-06-13T07:44:29.379502+00:00",
+    "user_id": "smoke_test_2",
+    "last_updated": "2026-06-13T07:44:29.379554+00:00",
+    "nation": "Brazil"
+  },
+  "smoke_test_4": {
+    "last_seen": "2026-06-13T07:44:33.924541+00:00",
+    "hot_takes": [
+      "Bonjour! Qui est le meilleur joueur du monde?",
+      "Bonjour! Qui est le meilleur joueur du monde?",
+      "Bonjour! Qui est le meilleur joueur du monde?",
+      "Bonjour! Qui est le meilleur joueur du monde?",
+      "Bonjour! Qui est le meilleur joueur du monde?",
+      "Bonjour! Qui est le meilleur joueur du monde?",
+      "Bonjour! Qui est le meilleur joueur du monde?",
+      "Bonjour! Qui est le meilleur joueur du monde?",
+      "Bonjour! Qui est le meilleur joueur du monde?"
+    ],
+    "user_id": "smoke_test_4",
+    "last_updated": "2026-06-13T07:44:33.924704+00:00"
+  },
+  "smoke_test_3": {
+    "last_seen": "2026-06-13T07:44:31.818693+00:00",
+    "nation": "Brazil",
+    "hot_takes": [
+      "Who will win between Nigeria and Brazil in the World Cup?",
+      "Who will win between Nigeria and Brazil in the World Cup?",
+      "Who will win between Nigeria and Brazil in the World Cup?",
+      "Who will win between Nigeria and Brazil in the World Cup?",
+      "Who will win between Nigeria and Brazil in the World Cup?",
+      "Who will win between Brazil and Argentina in the World Cup?",
+      "Who will win between Brazil and Morocco in the World Cup?",
+      "I want to predict Brazil vs Morocco in Group C — who wins?",
+      "I want to predict Brazil vs Morocco in Group C — who wins?"
+    ],
+    "user_id": "smoke_test_3",
+    "last_updated": "2026-06-13T07:44:31.818795+00:00"
+  },
+  "bench_user_0": {
+    "last_seen": "2026-06-12T09:08:41.414401+00:00",
+    "user_id": "bench_user_0",
+    "last_updated": "2026-06-12T09:08:41.414871+00:00",
+    "hot_takes": [
+      "Who is playing in the World Cup today?",
+      "What are the group standings?",
+      "Who is playing in the World Cup today?",
+      "What are the group standings?",
+      "Who is playing in the World Cup today?",
+      "What are the group standings?",
+      "Who is playing in the World Cup today?",
+      "What are the group standings?"
+    ]
+  },
+  "bench_user_1": {
+    "last_seen": "2026-06-12T09:08:52.834877+00:00",
+    "user_id": "bench_user_1",
+    "last_updated": "2026-06-12T09:08:52.834993+00:00",
+    "hot_takes": [
+      "Who is playing in the World Cup today?",
+      "What are the group standings?",
+      "Who is playing in the World Cup today?",
+      "What are the group standings?",
+      "Who is playing in the World Cup today?",
+      "What are the group standings?",
+      "Who is playing in the World Cup today?",
+      "What are the group standings?"
+    ]
+  },
+  "bench_user_2": {
+    "last_seen": "2026-06-12T09:09:00.903574+00:00",
+    "user_id": "bench_user_2",
+    "last_updated": "2026-06-12T09:09:00.903658+00:00",
+    "hot_takes": [
+      "Who is playing in the World Cup today?",
+      "What are the group standings?",
+      "Who is playing in the World Cup today?",
+      "What are the group standings?",
+      "Who is playing in the World Cup today?",
+      "What are the group standings?",
+      "Who is playing in the World Cup today?",
+      "What are the group standings?"
+    ]
+  }
+}
