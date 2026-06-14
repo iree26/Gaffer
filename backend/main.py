@@ -10,6 +10,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from models import (
+    AdminResolveRequest,
     CardEventRequest,
     CardEventResponse,
     ChatRequest,
@@ -336,6 +337,57 @@ def resolve_market_endpoint(market_id: str, body: MarketResolveRequest):
 
     updated = resolve_market(market_id, body.resultOptionId)
     return {"resolved": True, "users_updated": len(updated)}
+
+
+@app.post("/admin/resolve")
+def admin_resolve_markets(body: AdminResolveRequest):
+    markets_result = {}
+    resolved_count = 0
+
+    for market_id, option_id in body.results.items():
+        market = get_market_by_id(market_id)
+        if not market:
+            markets_result[market_id] = {"error": "Market not found"}
+            continue
+        if market.status == "RESOLVED":
+            markets_result[market_id] = {"error": "Already resolved"}
+            continue
+
+        ok = set_market_result(market_id, option_id)
+        if not ok:
+            markets_result[market_id] = {"error": "Could not resolve"}
+            continue
+
+        updated = resolve_market(market_id, option_id)
+        resolved_count += 1
+
+        users_hit = 0
+        users_missed = 0
+        for user_mem in updated:
+            for pred in user_mem.get("predictions", []):
+                if pred.get("marketId") != market_id:
+                    continue
+                if pred.get("result") == "HIT":
+                    users_hit += 1
+                elif pred.get("result") == "MISS":
+                    users_missed += 1
+
+        agent_take = None
+        agent_mem = memory.read("agent")
+        if agent_mem:
+            for pred in agent_mem.get("predictions", []):
+                if pred.get("marketId") == market_id:
+                    agent_take = pred.get("optionLabel") or pred.get("optionId")
+                    break
+
+        markets_result[market_id] = {
+            "winner": option_id,
+            "users_hit": users_hit,
+            "users_missed": users_missed,
+            "agent_take": agent_take,
+        }
+
+    return {"resolved": resolved_count, "markets": markets_result}
 
 
 # ── GET /health ────────────────────────────────────────────────────

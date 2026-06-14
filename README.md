@@ -1,13 +1,27 @@
-# GAFFER 2026
+# WorldMind 2026
 
-
+```
+__        __                _ __  __ _           _   _
+\ \      / /___  _ __ ___  |  \/  (_)_ __   ___| |_(_)_   _____
+ \ \ /\ / / _ \| '__/ _ \ | |\/| | | '_ \ / __| __| \ \ / / _ \
+  \ V  V / (_) | | |  __/ | |  | | | | | | (__| |_| |\ V /  __/
+   \_/\_/ \___/|_|  \___| |_|  |_|_|_| |_|\___|\__|_| \_/ \___|
 
                      WORLD CUP 2026 PREDICTION ENGINE
+```
 
+![Python](https://img.shields.io/badge/Python-3.14-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688)
+![OpenAI](https://img.shields.io/badge/OpenAI-GPT_4o_Mini-412991)
+![Walrus](https://img.shields.io/badge/Walrus-Mainnet-FF6B35)
+![License](https://img.shields.io/badge/License-MIT-green)
+![Build](https://img.shields.io/badge/Build-Passing-brightgreen)
+
+---
 
 ## Overview
 
-WorldMind 2026 is an AI-powered football prediction platform for the FIFA World Cup 2026. It combines a GPT-4o-powered agent with on-chain Walrus memory to deliver personalized prediction assistance, star ratings, and chat-based fan engagement. Users complete a signup quiz to establish a baseline rating, then make predictions across 12 group-stage markets, knockout rounds, and the final champion market. Every interaction is stored on Walrus Mainnet, creating an evolving memory of each fan's journey.
+GAFFER 2026 is an AI-powered football prediction platform for the FIFA World Cup 2026. It combines a GPT-4o-powered agent with on-chain Walrus memory to deliver personalized prediction assistance, star ratings, and chat-based fan engagement. Users complete a signup quiz to establish a baseline rating, then make predictions across 12 group-stage markets, knockout rounds, and the final champion market. Every interaction is stored on Walrus Mainnet, creating an evolving memory of each fan's journey.
 
 ---
 
