@@ -342,8 +342,20 @@ export default function PredictionScreen() {
         .d-stars{ display:flex; align-items:center; gap:.7rem; font-family:var(--display); font-weight:800; font-size:1.5rem; }
         .d-stars .old{ color:var(--line); } .d-stars .arrow{ color:var(--deep); opacity:.5; } .d-stars .new.up{ color:var(--bright); } .d-stars .new.down{ color:var(--down); }
         .d-rank{ font-weight:700; font-size:.9rem; color:var(--deep); } .d-rank b.up{ color:var(--bright); } .d-rank b.down{ color:var(--down); }
-        @media (max-width:560px){ .teams{ gap:.4rem; } .team-name{ font-size:.74rem; } }
-      `}</style>
+        @media (max-width:620px){
+            .grid{ grid-template-columns:1fr; gap:.85rem; }
+            .wrap{ padding:0 1rem; }
+            .h{ font-size:1.9rem; }
+            .card{ padding:.9rem; }
+            .grp{ font-size:1rem; }
+            .teams{ gap:.5rem; }
+            .team{ padding:.6rem .65rem; }
+            .team-name{ font-size:.82rem; white-space:normal; }
+            .submitbar{ bottom:10px; padding:.7rem .8rem .7rem 1rem; }
+            .submit-label{ font-size:.8rem; }
+            .submit{ padding:.7rem 1.1rem; font-size:.9rem; }
+            }
+  `}</style>
 
       <main className="wrap">
         <div className="pbar"><i style={{ width: `${(done / groups.length) * 100}%` }} /></div>
@@ -455,3 +467,4 @@ export default function PredictionScreen() {
     </div>
   );
 }
+
