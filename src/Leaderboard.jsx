@@ -114,6 +114,8 @@ export default function Leaderboard() {
   const [bottom, setBottom] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const [me, setMe] = useState(null);
+
   useEffect(() => {
     (async () => {
       try {
@@ -124,9 +126,15 @@ export default function Leaderboard() {
         setTop(FALLBACK_TOP); setBottom(FALLBACK_BOTTOM);
       } finally { setLoading(false); }
     })();
-  }, []);
+    // pull the true profile so "your" row matches the backend
+    api.getUser(user.displayName).then(setMe).catch(() => {});
+  }, [user.displayName]);
 
-  const YOU = { rank: user.rank ?? 248, displayName: `${user.displayName} (you)`, displayStars: user.displayStars || 0 };
+  const YOU = {
+    rank: me?.rank ?? user.rank ?? 248,
+    displayName: `${user.displayName} (you)`,
+    displayStars: me?.displayStars ?? user.displayStars ?? 0,
+  };
   const list = top || [];
   const podium = list.slice(0, 3);
   const rest = list.slice(3);
@@ -214,3 +222,5 @@ export default function Leaderboard() {
     </div>
   );
 }
+
+ 
