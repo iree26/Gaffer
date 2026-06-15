@@ -79,6 +79,32 @@ const FALLBACK_GROUPS = [
     {id:"b0",label:"Canada",flag:"ca"},{id:"b1",label:"Switzerland",flag:"ch"},{id:"b2",label:"Qatar",flag:"qa"},{id:"b3",label:"Bosnia",flag:"ba"}] },
 ];
 
+// Creative, matchup-aware reaction the gaffer gives the moment you pick.
+// Banter + a real football observation, varied by whether you backed the favourite or an upset.
+function localReaction(group, optIndex, expertise) {
+  const teams = group.options.map((o) => o.label);
+  const pick = teams[optIndex];
+  const fav = teams[0];
+  const rival = teams[1] || teams[0];
+  const exp = expertise === "expert";
+  const FAV_LINES = [
+    `${pick} to top ${group.title}. Safe hands, but ${rival} won't roll over.`,
+    `Hard to argue ${pick} in ${group.title}. Just don't sleep on ${rival}.`,
+    `${pick}, the obvious call. ${exp ? "I expected more nerve from you." : "Solid, sensible, no notes."}`,
+    `Backing ${pick}? The bookies agree. ${rival}'s the banana skin though.`,
+  ];
+  const UPSET_LINES = [
+    `${pick} over ${fav} in ${group.title}? Bold. I respect a gambler.`,
+    `Ooh, ${pick} to upset ${fav}. ${exp ? "You see something I don't?" : "Brave, I like it."}`,
+    `${pick} winning ${group.title} means ${fav} go home early. Spicy.`,
+    `Calling ${pick} ahead of ${fav}, that's a statement. The table will remember it.`,
+  ];
+  const pool = optIndex === 0 ? FAV_LINES : UPSET_LINES;
+  // deterministic pick so it stays stable per group, not random each render
+  const seed = group.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) + optIndex;
+  return pool[seed % pool.length];
+}
+
 export default function PredictionScreen() {
   const navigate = useNavigate();
   const { user, update } = useUser();
@@ -119,10 +145,14 @@ export default function PredictionScreen() {
     setAgentReplies((r) => ({ ...r, [market.id]: { text: "", loading: true } }));
     try {
       const res = await api.predict(user.displayName, market.id, option.id, "");
-      setAgentReplies((r) => ({ ...r, [market.id]: { text: res.agentReply || res.reply || "", loading: false } }));
+      const live = res.agentReply || res.reply || "";
+      // use the live reply; if it's empty or the generic repeated line, fall back to a creative local one
+      const generic = /interesting pick|what is your reasoning/i.test(live);
+      const text = (!live || generic) ? localReaction(market, optIndex, user.expertise) : live;
+      setAgentReplies((r) => ({ ...r, [market.id]: { text, loading: false } }));
       if (res.user) update({ displayStars: res.user.displayStars ?? user.displayStars, rank: res.user.rank ?? user.rank });
     } catch (e) {
-      setAgentReplies((r) => ({ ...r, [market.id]: { text: "", loading: false } }));
+      setAgentReplies((r) => ({ ...r, [market.id]: { text: localReaction(market, optIndex, user.expertise), loading: false } }));
     }
   }
 
@@ -155,36 +185,63 @@ export default function PredictionScreen() {
     setTimeout(() => setPhase("verdict"), 1700);
   }
 
-  function startRewind() {
+  // REAL rewind: trigger resolution on the backend, then read true stars/rank from /user.
+  async function startRewind() {
+    // build the results map the demo will resolve with.
+    // CONFIRM AGAINST /docs: backend expects { marketId: winningOptionId }.
+    // For the demo we declare the favourite (option 0) the winner of each group.
+    const results = {};
+    groups.forEach((g) => { results[g.id] = g.options[0]?.id; });
+
+    setPhase("rewind"); setRevealed(0);
+
+    // fire the real resolution (don't block the reveal animation on it)
+    let resolved = null;
+    const resolvePromise = api.resolve(results).catch(() => null);
+
+    // compute the per-card hit/miss display from the same results we sent
     const hits = {};
     let correct = 0;
-    groups.forEach((g, i) => {
+    groups.forEach((g) => {
       const ti = pickIndex[g.id];
-      const winningIndex = i % 3 === 0 ? ti : (ti === 0 ? 1 : 0);
-      const h = ti === winningIndex; hits[g.id] = { hit: h, winnerLabel: g.options[winningIndex]?.label };
+      const winnerId = results[g.id];
+      const h = g.options[ti]?.id === winnerId;
+      hits[g.id] = { hit: h, winnerLabel: g.options.find((o) => o.id === winnerId)?.label };
       if (h) correct++;
     });
-    const accuracy = correct / groups.length;
-    const newStars = Math.max(0.5, Math.round(accuracy * 5 * 2) / 2);
+
     const baseline = user.displayStars || 0;
     const prevRank = user.rank ?? 248;
-    const newRank = Math.max(1, Math.round((5 - newStars) * 900) + 12);
-    const v = verdict;
-    let callback;
-    if (v?.disG) {
-      const h = hits[v.disG.id]?.hit;
-      callback = h ? `${v.disG.title}: I backed ${v.disFav}, you stuck with ${v.disName}. You were right — and I don't forget that.`
-                   : `${v.disG.title}: I told you ${v.disFav} over ${v.disName}. I was right. Told you I'd remember.`;
-    } else callback = `${correct} from ${groups.length}. The table will judge you.`;
 
-    setOutcome({ hits, correct, newStars, baseline, prevRank, newRank, callback });
-    setPhase("rewind"); setRevealed(0);
+    // animate the reveal
     let n = 0;
-    const id = setInterval(() => {
+    const id = setInterval(async () => {
       n++; setRevealed(n);
       if (n >= groups.length) {
         clearInterval(id);
-        update({ displayStars: newStars, rank: newRank, accuracy: Math.round(accuracy*100), move: prevRank - newRank });
+        resolved = await resolvePromise;
+        // pull TRUE stars/rank from the backend so it matches the leaderboard
+        let newStars, newRank;
+        try {
+          const me = await api.getUser(user.displayName);
+          newStars = me.displayStars ?? me.stars;
+          newRank = me.rank;
+        } catch (e) { /* fall through to local */ }
+        if (newStars === undefined) {
+          const accuracy = correct / groups.length;
+          newStars = Math.max(0.5, Math.round(accuracy * 5 * 2) / 2);
+          newRank = Math.max(1, Math.round((5 - newStars) * 900) + 12);
+        }
+        const v = verdict;
+        let callback;
+        if (v?.disG) {
+          const h = hits[v.disG.id]?.hit;
+          callback = h ? `${v.disG.title}: I backed ${v.disFav}, you stuck with ${v.disName}. You were right — and I don't forget that.`
+                       : `${v.disG.title}: I told you ${v.disFav} over ${v.disName}. I was right. Told you I'd remember.`;
+        } else callback = `${correct} from ${groups.length}. The table will judge you.`;
+
+        setOutcome({ hits, correct, newStars, newRank, baseline, prevRank, callback });
+        update({ displayStars: newStars, rank: newRank, accuracy: Math.round((correct/groups.length)*100), move: prevRank - newRank });
         setTimeout(() => setPhase("callback"), 800);
       }
     }, 240);
@@ -252,6 +309,9 @@ export default function PredictionScreen() {
         .agent .atext{ font-size:.82rem; font-weight:600; color:var(--deep); line-height:1.4; }
         .agent .atext i{ animation:blink 1.2s infinite; font-style:normal; } .agent .atext i:nth-child(2){animation-delay:.2s;} .agent .atext i:nth-child(3){animation-delay:.4s;}
         @keyframes blink{0%,100%{opacity:.2;}50%{opacity:1;}}
+        .chatlink{ display:block; margin-top:.5rem; border:none; background:transparent; cursor:pointer; font:inherit;
+          font-weight:800; font-size:.74rem; letter-spacing:.03em; color:var(--bright); padding:0; }
+        .chatlink:hover{ text-decoration:underline; }
         .submitbar{ position:fixed; left:50%; transform:translateX(-50%); bottom:14px; z-index:30; width:min(720px, calc(100% - 20px));
           display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.8rem 1rem .8rem 1.3rem;
           background:rgba(255,255,255,.78); backdrop-filter:blur(16px); border:1px solid var(--line); border-radius:20px; box-shadow:0 14px 44px rgba(7,94,50,.18); }
@@ -326,7 +386,14 @@ export default function PredictionScreen() {
                 {reply && !resolving && (
                   <div className="agent">
                     <span className="dot" />
-                    <span className="atext">{reply.loading ? <><i>.</i><i>.</i><i>.</i></> : reply.text}</span>
+                    <div style={{ flex: 1 }}>
+                      <span className="atext">{reply.loading ? <><i>.</i><i>.</i><i>.</i></> : reply.text}</span>
+                      {!reply.loading && reply.text && (
+                        <button className="chatlink" onClick={() => navigate('/talk', { state: { marketId: g.id } })}>
+                          Talk about {g.title} →
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )}
               </article>

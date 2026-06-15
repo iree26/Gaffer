@@ -13,10 +13,8 @@ async function req(path, options = {}) {
   return res.json();
 }
 
-// options come as ["32","40","48","64"]; backend wants the chosen LETTER (a/b/c/d)
 export const letterFor = (index) => ['a', 'b', 'c', 'd', 'e', 'f'][index];
 
-// knowledge rating from quiz percentage (his spec)
 export function knowledgeRating(pct) {
   if (pct >= 95) return { emoji: '👑', label: 'World Cup Legend' };
   if (pct >= 80) return { emoji: '🧠', label: 'Tactician' };
@@ -25,11 +23,15 @@ export function knowledgeRating(pct) {
   return { emoji: '🌱', label: 'Casual Fan' };
 }
 
+export function warmServer() {
+  fetch(`${BASE}/health`).catch(() => { fetch(`${BASE}/markets`).catch(() => {}); });
+}
+
 export const api = {
   getMarkets:     ()                => req('/markets'),
   submitQuiz:     (userId, expertise, answers) =>
                     req('/signup/quiz', { method: 'POST', body: JSON.stringify({ userId, expertise, answers }) }),
-  getQuizResult:  (userId) => req(`/api/quiz/result?userId=${encodeURIComponent(userId)}`),
+  getQuizResult:  (userId)          => req(`/api/quiz/result?userId=${encodeURIComponent(userId)}`),
   predict:        (userId, marketId, optionId, reasoning = '') =>
                     req('/agent/predict', { method: 'POST', body: JSON.stringify({ userId, marketId, optionId, reasoning }) }),
   chat:           (userId, message, marketId = '') =>
@@ -38,15 +40,7 @@ export const api = {
   postComment:    (marketId, userId, text) =>
                     req(`/markets/${marketId}/comments`, { method: 'POST', body: JSON.stringify({ userId, text }) }),
   getLeaderboard: ()                => req('/leaderboard'),
-  getUser:        (userId)          => req(`/user/${userId}`),
-  getComments:    (marketId)        => req(`/markets/${marketId}/comments`),
-  postComment:    (marketId, userId, text) =>
-                    req(`/markets/${marketId}/comments`, { method: 'POST', body: JSON.stringify({ userId, text }) }),
+  getUser:        (userId)          => req(`/user/${encodeURIComponent(userId)}`),
+  // CONFIRM AGAINST /docs: body shape and what it returns
+  resolve:        (results)         => req('/admin/resolve', { method: 'POST', body: JSON.stringify({ results }) }),
 };
-// fire-and-forget: wakes the server so the first real call isn't slow
-export function warmServer() {
-  fetch(`${BASE}/health`).catch(() => {
-    // health route might differ; fall back to markets, still wakes it
-    fetch(`${BASE}/markets`).catch(() => {});
-  });
-}
