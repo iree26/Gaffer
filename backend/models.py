@@ -446,6 +446,25 @@ class FeedRepostResponse(BaseModel):
     total_reposts: int
 
 
+class FeedQuoteBody(BaseModel):
+    user_id: str
+    comment: str = ""
+
+
+class FeedQuoteResponse(BaseModel):
+    quoted: bool
+    total_quotes: int
+
+
+class FeedShareBody(BaseModel):
+    user_id: str
+
+
+class FeedShareResponse(BaseModel):
+    shared: bool
+    total_shares: int
+
+
 class FeedCommentBody(BaseModel):
     user_id: str
     content: str

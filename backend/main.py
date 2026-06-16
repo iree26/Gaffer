@@ -424,6 +424,8 @@ _feed_posts: Dict[str, dict] = {}
 _feed_likes: Dict[str, List[str]] = {}
 _feed_reposts: Dict[str, List[dict]] = {}
 _feed_comments: Dict[str, List[dict]] = {}
+_feed_quotes: Dict[str, List[dict]] = {}
+_feed_shares: Dict[str, List[dict]] = {}
 _follows: Dict[str, List[str]] = {}
 
 _hot_takes: Dict[str, dict] = {}
@@ -750,6 +752,8 @@ def api_feed_post(body: FeedPostBody):
         "type": body.type,
         "likes_count": 0,
         "reposts_count": 0,
+        "quotes_count": 0,
+        "shares_count": 0,
         "comments_count": 0,
         "agent_reply": agent_reply,
         "is_hot_take": body.type == "hot_take",
@@ -760,6 +764,8 @@ def api_feed_post(body: FeedPostBody):
     _feed_likes[post_id] = []
     _feed_reposts[post_id] = []
     _feed_comments[post_id] = []
+    _feed_quotes[post_id] = []
+    _feed_shares[post_id] = []
     user_mem["posts_count"] = user_mem.get("posts_count", 0) + 1
     memory.write(body.user_id, user_mem)
     check_and_award_badges(body.user_id)
@@ -835,6 +841,8 @@ def api_feed_repost(post_id: str, body: FeedRepostBody):
         "type": "repost",
         "likes_count": 0,
         "reposts_count": 0,
+        "quotes_count": 0,
+        "shares_count": 0,
         "comments_count": 0,
         "agent_reply": "",
         "is_hot_take": False,
@@ -846,9 +854,74 @@ def api_feed_repost(post_id: str, body: FeedRepostBody):
     _feed_likes[new_post_id] = []
     _feed_reposts[new_post_id] = []
     _feed_comments[new_post_id] = []
+    _feed_quotes[new_post_id] = []
+    _feed_shares[new_post_id] = []
     reposter_mem["posts_count"] = reposter_mem.get("posts_count", 0) + 1
     memory.write(body.user_id, reposter_mem)
     return {"reposted": True, "total_reposts": len(reposts), "new_post_id": new_post_id, "new_post": new_post}
+
+
+@app.post("/api/feed/{post_id}/quote")
+def api_feed_quote(post_id: str, body: FeedRepostBody):
+    if post_id not in _feed_posts:
+        raise HTTPException(404, "Post not found")
+    original = _feed_posts[post_id]
+    user_mem = memory.read(body.user_id)
+    if not user_mem:
+        raise HTTPException(404, "User not found")
+    quotes = _feed_quotes.setdefault(post_id, [])
+    quote_entry = {
+        "user_id": body.user_id,
+        "comment": body.comment,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    quotes.append(quote_entry)
+    _feed_posts[post_id]["quotes_count"] = len(quotes)
+    if original["user_id"] != body.user_id:
+        _add_notification(original["user_id"], "quote", f"{_display_name(body.user_id)} quoted your post!", post_id)
+    new_post_id = f"post_{uuid.uuid4().hex[:8]}"
+    quote_content = f"\"{original['content']}\""
+    if body.comment:
+        quote_content = f"{body.comment}\n\n\"{original['content']}\""
+    new_post = {
+        "id": new_post_id,
+        "user_id": body.user_id,
+        "display_name": user_mem.get("displayName", body.user_id),
+        "stars": user_mem.get("displayStars", 0.5),
+        "country_flag": user_mem.get("flag_emoji", ""),
+        "content": quote_content,
+        "type": "quote",
+        "likes_count": 0,
+        "reposts_count": 0,
+        "quotes_count": 0,
+        "shares_count": 0,
+        "comments_count": 0,
+        "agent_reply": _agent_feed_reply(body.user_id, body.comment or original['content'], "quote"),
+        "is_hot_take": False,
+        "streak_at_post_time": user_mem.get("current_streak", 0),
+        "original_post_id": post_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    _feed_posts[new_post_id] = new_post
+    _feed_likes[new_post_id] = []
+    _feed_reposts[new_post_id] = []
+    _feed_comments[new_post_id] = []
+    _feed_quotes[new_post_id] = []
+    _feed_shares[new_post_id] = []
+    user_mem["posts_count"] = user_mem.get("posts_count", 0) + 1
+    memory.write(body.user_id, user_mem)
+    return {"quoted": True, "total_quotes": len(quotes), "new_post_id": new_post_id, "new_post": new_post}
+
+
+@app.post("/api/feed/{post_id}/share")
+def api_feed_share(post_id: str, body: FeedLikeBody):
+    if post_id not in _feed_posts:
+        raise HTTPException(404, "Post not found")
+    shares = _feed_shares.setdefault(post_id, [])
+    if body.user_id not in [s["user_id"] for s in shares]:
+        shares.append({"user_id": body.user_id, "created_at": datetime.now(timezone.utc).isoformat()})
+    _feed_posts[post_id]["shares_count"] = len(shares)
+    return {"shared": True, "total_shares": len(shares)}
 
 
 @app.post("/api/feed/{post_id}/comment")
