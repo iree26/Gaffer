@@ -1,11 +1,38 @@
-
+:root {
+  --bg: #000000;
+  --surface: #0D0D0D;
+  --card: #1A1A1A;
+  --card-hover: #222222;
+  --border: #2E2E2E;
+  --border-hover: #3A3A3A;
+  --text: #F0F0F0;
+  --text-secondary: #8A8A8A;
+  --text-tertiary: #5E5E5E;
+  --accent: #F5C518;
+  --accent-hover: #FFD633;
+  --accent-muted: rgba(245, 197, 24, 0.12);
+  --danger: #FF3B30;
+  --success: #34C759;
+  --font-display: 'Syne', 'Plus Jakarta Sans', sans-serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body, #root {
   width: 100%;
   min-height: 100%;
-  background: #fff;
+  background: var(--bg);
 }
 
-body { -webkit-font-smoothing: antialiased; }
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--text);
+  font-family: var(--font-body);
+}
+
+::selection {
+  background: var(--accent-muted);
+  color: var(--accent);
+}

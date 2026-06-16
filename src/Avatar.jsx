@@ -1,19 +1,17 @@
 import { useUser } from './UserContext';
 
-// the emblem set — football-themed, picked at random per user
-export const EMBLEMS = ["⚽","🥅","🧤","👟","🏆","🎽","📣","🚩","⭐","🔥"];
-
 export default function Avatar({ size = 34, showName = false }) {
   const { user } = useUser();
+  const initial = (user.displayName || '?')[0].toUpperCase();
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '.55rem' }}>
-      {showName && <span style={{ fontWeight: 700, fontSize: '.85rem', color: 'var(--deep)' }}>{user.displayName}</span>}
+      {showName && <span style={{ fontWeight: 600, fontSize: '.85rem', color: 'var(--text-secondary)' }}>{user.displayName}</span>}
       <span style={{
-        width: size, height: size, borderRadius: '50%', background: user.avatarColor,
+        width: size, height: size, borderRadius: '6px', background: user.avatarColor,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: size * 0.52, boxShadow: '0 2px 8px rgba(7,94,50,.25)',
+        fontSize: size * 0.48, fontWeight: 700, color: '#fff',
         flex: 'none', userSelect: 'none', lineHeight: 1,
-      }}>{user.avatarEmblem}</span>
+      }}>{initial}</span>
     </span>
   );
 }
