@@ -336,3 +336,242 @@ class CardEventResponse(BaseModel):
     player: str
     team: str
     minute: int
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# NEW MODELS FOR FEATURES 1-14
+# ══════════════════════════════════════════════════════════════════════════
+
+# ── Feature 1: Auth ──────────────────────────────────────────────────────
+
+class RegisterBody(BaseModel):
+    username: str
+    expertise: str = "beginner"
+
+
+class LoginBody(BaseModel):
+    username: str
+
+
+class AuthResponse(BaseModel):
+    user_id: str
+    username: str
+    token: str
+    badges: List[str] = []
+
+
+class ExistsResponse(BaseModel):
+    exists: bool
+
+
+# ── Feature 2: Profiles ──────────────────────────────────────────────────
+
+class FollowBody(BaseModel):
+    follower_id: str
+
+
+class FollowResponse(BaseModel):
+    following: bool
+    followers_count: int
+
+
+class AllegianceBody(BaseModel):
+    country: str
+    flag_emoji: str
+
+
+class AllegianceResponse(BaseModel):
+    country: str
+    flag_emoji: str
+
+
+class FullProfileResponse(BaseModel):
+    username: str
+    display_name: str = ""
+    stars: float = 0.5
+    rank: int = 0
+    expertise: str = "beginner"
+    quiz_score: int = 0
+    country_allegiance: Optional[str] = None
+    flag_emoji: Optional[str] = None
+    followers_count: int = 0
+    following_count: int = 0
+    predictions_count: int = 0
+    correct_predictions: int = 0
+    accuracy: str = "0%"
+    current_streak: int = 0
+    best_streak: int = 0
+    last_5_calls: List[dict] = []
+    posts_count: int = 0
+    joined: str = ""
+    badges: List[str] = []
+    recent_posts: List[dict] = []
+    recent_predictions: List[dict] = []
+    hot_takes_count: int = 0
+    challenges_won: int = 0
+    challenges_lost: int = 0
+
+
+# ── Feature 3: Feed ──────────────────────────────────────────────────────
+
+class FeedPostBody(BaseModel):
+    user_id: str
+    content: str
+    type: str = "take"
+
+
+class FeedPostResponse(BaseModel):
+    post: dict
+    agent_reply: str
+
+
+class FeedLikeBody(BaseModel):
+    user_id: str
+
+
+class FeedLikeResponse(BaseModel):
+    liked: bool
+    total_likes: int
+
+
+class FeedRepostBody(BaseModel):
+    user_id: str
+    comment: str = ""
+
+
+class FeedRepostResponse(BaseModel):
+    reposted: bool
+    total_reposts: int
+
+
+class FeedCommentBody(BaseModel):
+    user_id: str
+    content: str
+
+
+class FeedCommentResponse(BaseModel):
+    comment: dict
+    agent_reply: str
+
+
+# ── Feature 4: Hot Takes ─────────────────────────────────────────────────
+
+class HotTakePostBody(BaseModel):
+    user_id: str
+    take: str
+
+
+class HotTakePostResponse(BaseModel):
+    hot_take: dict
+    agent_verdict: str
+
+
+class HotTakeVoteBody(BaseModel):
+    user_id: str
+    vote: str
+
+
+class HotTakeVoteResponse(BaseModel):
+    fire_count: int
+    ice_count: int
+    your_vote: str
+
+
+# ── Feature 5: Challenges ────────────────────────────────────────────────
+
+class ChallengeCreateBody(BaseModel):
+    challenger_id: str
+    opponent_username: str
+    market_id: str
+    challenger_pick: str
+    stars_at_stake: int = 1
+
+
+class ChallengeCreateResponse(BaseModel):
+    challenge_id: str
+    status: str = "pending"
+
+
+class ChallengeAcceptBody(BaseModel):
+    user_id: str
+    their_pick: str
+
+
+class ChallengeDeclineBody(BaseModel):
+    user_id: str
+
+
+# ── Feature 7: Gaffer Predictions ────────────────────────────────────────
+
+class GafferPredictBody(BaseModel):
+    home_team: str
+    away_team: str
+    match_id: str
+
+
+class GafferPredictResponse(BaseModel):
+    prediction: str
+    confidence: int
+    reasoning: str
+    posted_to_feed: bool = True
+
+
+# ── Feature 9: Bracket ───────────────────────────────────────────────────
+
+class BracketSubmitBody(BaseModel):
+    user_id: str
+    bracket: dict
+
+
+class BracketSubmitResponse(BaseModel):
+    bracket_id: str
+    submitted: bool = True
+
+
+# ── Feature 10: Groups ───────────────────────────────────────────────────
+
+class GroupCreateBody(BaseModel):
+    creator_id: str
+    name: str
+    description: str = ""
+    is_private: bool = False
+
+
+class GroupCreateResponse(BaseModel):
+    group_id: str
+    invite_code: str
+
+
+class GroupJoinBody(BaseModel):
+    user_id: str
+    invite_code: str
+
+
+class GroupPostBody(BaseModel):
+    user_id: str
+    content: str
+
+
+# ── Feature 11: Notifications ────────────────────────────────────────────
+
+class NotificationReadBody(BaseModel):
+    user_id: str
+
+
+# ── Feature 12: Terraces ─────────────────────────────────────────────────
+
+class TerraceGeneralBody(BaseModel):
+    user_id: str
+    message: str
+
+
+class TerraceGeneralResponse(BaseModel):
+    reply: str
+    source: str = "gaffer"
+
+
+# ── Feature 14: Quiz Refresh ─────────────────────────────────────────────
+
+class QuizRefreshResponse(BaseModel):
+    session_id: str
+    questions: list
