@@ -686,6 +686,19 @@ def api_profile_predictions(username: str):
     return {"predictions": predictions_sorted}
 
 
+@app.put("/api/profile/{username}/update")
+def api_profile_update(username: str, body: dict):
+    user_mem = memory.read(username)
+    if not user_mem:
+        raise HTTPException(404, "User not found")
+    if "display_name" in body and body["display_name"]:
+        user_mem["displayName"] = body["display_name"]
+    if "bio" in body:
+        user_mem["bio"] = body["bio"]
+    memory.write(username, user_mem)
+    return {"updated": True, "display_name": user_mem.get("displayName", username), "bio": user_mem.get("bio", "")}
+
+
 @app.post("/api/profile/{username}/allegiance")
 def api_set_allegiance(username: str, body: AllegianceBody):
     user_mem = memory.read(username)
@@ -1361,6 +1374,8 @@ def api_notification_read_all(body: NotificationReadBody):
 # FEATURE 12: TERRACES IMPROVEMENTS
 # ══════════════════════════════════════════════════════════════════════════
 
+_terraces_messages: List[dict] = []
+
 @app.post("/api/terraces/general")
 async def api_terraces_general(body: TerraceGeneralBody):
     brave_results = await _brave_search(body.message)
@@ -1375,7 +1390,24 @@ async def api_terraces_general(body: TerraceGeneralBody):
             agent_msg = f"Great question! Let me check the latest info on that.{context}"
     else:
         agent_msg = f"Here's what I found about that!{context}"
-    return {"reply": agent_msg, "source": "gaffer"}
+    msg = {
+        "id": f"ter_{uuid.uuid4().hex[:8]}",
+        "user_id": body.user_id,
+        "display_name": user_mem.get("displayName", body.user_id) if user_mem else body.user_id,
+        "display_stars": user_mem.get("displayStars", 0.5) if user_mem else 0.5,
+        "text": body.message,
+        "reply": agent_msg,
+        "source": "gaffer",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    _terraces_messages.append(msg)
+    return msg
+
+
+@app.get("/api/terraces/general")
+def api_get_terraces_general():
+    messages = sorted(_terraces_messages, key=lambda m: m.get("created_at", ""), reverse=True)
+    return {"messages": messages}
 
 
 # ══════════════════════════════════════════════════════════════════════════
