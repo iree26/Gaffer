@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from './UserContext';
 
@@ -49,7 +50,7 @@ const STEP_INFO = {
   },
 };
 
-export default function OnboardingOverlay() {
+export default function OnboardingOverlay({ goAway } = {}) {
   const navigate = useNavigate();
   const { onboardingStep, advanceOnboarding, completeOnboarding } = useUser();
 
@@ -58,7 +59,10 @@ export default function OnboardingOverlay() {
   const info = STEP_INFO[onboardingStep];
   const isLast = onboardingStep === 'hottakes';
 
+  const [dismissed, setDismissed] = useState(false);
+
   function handleGo() {
+    setDismissed(true);
     navigate(STEP_ROUTES[onboardingStep]);
   }
 
@@ -75,6 +79,8 @@ export default function OnboardingOverlay() {
       }
     }
   }
+
+  if (dismissed) return null;
 
   return (
     <div className="onboarding-overlay">
