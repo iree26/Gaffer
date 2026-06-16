@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import os
+import random
+import re
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 
@@ -17,6 +19,77 @@ load_dotenv()
 
 _client = None
 memory = WalrusMemory()
+
+
+_CONTEXTUAL_REPLIES = {
+    r"\b(goal|score|win|victory|champion|title)\b": [
+        "Goals win games, but the best prediction is the one you stick to. How are you feeling about this one?",
+        "Big result energy. You love to see it. What's your next call?",
+        "Goals change games, but good instincts change your rank. I'm watching.",
+        "Every goal tells a story. Yours? You saw it coming. Respect.",
+    ],
+    r"\b(lose|loss|defeat|miss|mistake|bottle|choke)\b": [
+        "Football has a short memory. One bad result doesn't define the tournament.",
+        "The best learn from the losses. What would you do different next time?",
+        "Tough beat. But the group stage is far from over — plenty of time to turn it around.",
+    ],
+    r"\b(underdog|upset|shock|surprise|dark horse)\b": [
+        "The World Cup loves an underdog. This could be the story of the tournament.",
+        "Every tournament needs a shock result. You might be onto something.",
+        "Bold. The big teams sleep on the minnows at their own risk.",
+    ],
+    r"\b(predict|prediction|call|pick|tip)\b": [
+        "You've made your call. Now the football gods decide. Let's see if the stats back you up.",
+        "Locked in. I respect a predictor who commits early.",
+        "Prediction noted. The table will update once the result drops.",
+    ],
+    r"\b(team|squad|line.?up|eleven|starting)\b": [
+        "Squad depth wins tournaments. Who's your dark horse to go all the way?",
+        "The right XI can change everything. Trust the gaffer's instincts.",
+        "Teams rise and fall on chemistry. You watching the warm-up matches?",
+    ],
+    r"\b(player|star|legend|goat|ballon)\b": [
+        "One player can light up a tournament. Which one's carrying your hopes?",
+        "Legends are made in World Cups. You might be watching history unfold.",
+        "Stars rise when it matters most. Let's see who delivers.",
+    ],
+    r"\b(defence|defense|clean.?sheet|tackle|backline)\b": [
+        "Defence wins tournaments. A clean sheet in the knockout stages is gold dust.",
+        "Solid at the back — that's how tournaments are won.",
+    ],
+    r"\b(midfield|midfielder|creative|pass|dictate)\b": [
+        "Control the midfield, control the game. Who's running the show for you?",
+        "Midfield battles decide tight games. You picking the right general?",
+    ],
+    r"\b(attack|forward|striker|winger|front.?line)\b": [
+        "Attack wins matches — but only if you finish your chances.",
+        "Firepower up front. Who's getting the goals for you?",
+    ],
+    r"\b(group|stage|qualif|round|knockout|semi|final)\b": [
+        "The group stage is where legends start their journey. Every point matters.",
+        "Knockout football is a different beast. One moment changes everything.",
+        "The final is where heroes are made. Can you see your team lifting it?",
+    ],
+}
+
+
+def _contextual_fallback_reply(user_message: str, user_name: str = "Fan", expertise: str = "beginner") -> str:
+    msg = user_message.lower()
+    for pattern, replies in _CONTEXTUAL_REPLIES.items():
+        if re.search(pattern, msg, re.IGNORECASE):
+            return random.choice(replies)
+    if expertise == "expert":
+        return random.choice([
+            f"Bold take, {user_name}. Walk me through the thinking behind it.",
+            f"You're not afraid to go against the grain. I like it. What's the angle?",
+            f"I've seen this movie before. Let's hope the ending is different for you.",
+            f"You're putting your stars on the line. That takes nerve.",
+        ])
+    return random.choice([
+        f"Good shout! What's drawing you to that call, {user_name}?",
+        f"Interesting. Let's see how this plays out on the pitch.",
+        f"You've got a view. I respect that. Keep watching the group stages.",
+    ])
 
 
 def _get_client() -> OpenAI:
@@ -128,10 +201,7 @@ def generate_agent_reply(
         )
         reply = response.choices[0].message.content or ""
     except Exception:
-        if expertise == "expert":
-            reply = f"Interesting pick. What is your reasoning behind {option_label or 'this'}?"
-        else:
-            reply = f"Solid pick! {option_label or 'This team'} has some real strengths. Want me to break it down?"
+        reply = _contextual_fallback_reply(user_message, user_name, expertise)
 
     return reply.strip()
 

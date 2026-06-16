@@ -806,6 +806,10 @@ def api_feed_like(post_id: str, body: FeedLikeBody):
 def api_feed_repost(post_id: str, body: FeedRepostBody):
     if post_id not in _feed_posts:
         raise HTTPException(404, "Post not found")
+    original = _feed_posts[post_id]
+    reposter_mem = memory.read(body.user_id)
+    if not reposter_mem:
+        raise HTTPException(404, "User not found")
     reposts = _feed_reposts.setdefault(post_id, [])
     repost = {
         "user_id": body.user_id,
@@ -814,10 +818,37 @@ def api_feed_repost(post_id: str, body: FeedRepostBody):
     }
     reposts.append(repost)
     _feed_posts[post_id]["reposts_count"] = len(reposts)
-    post = _feed_posts[post_id]
-    if post["user_id"] != body.user_id:
-        _add_notification(post["user_id"], "repost", f"{_display_name(body.user_id)} reposted your post!", post_id)
-    return {"reposted": True, "total_reposts": len(reposts)}
+    if original["user_id"] != body.user_id:
+        _add_notification(original["user_id"], "repost", f"{_display_name(body.user_id)} reposted your post!", post_id)
+    new_post_id = f"post_{uuid.uuid4().hex[:8]}"
+    quote = f'{" " + body.comment if body.comment else ""}'
+    repost_content = f"Reposted: \"{original['content']}\""
+    if body.comment:
+        repost_content = f"{body.comment}\n\nReposted: \"{original['content']}\""
+    new_post = {
+        "id": new_post_id,
+        "user_id": body.user_id,
+        "display_name": reposter_mem.get("displayName", body.user_id),
+        "stars": reposter_mem.get("displayStars", 0.5),
+        "country_flag": reposter_mem.get("flag_emoji", ""),
+        "content": repost_content,
+        "type": "repost",
+        "likes_count": 0,
+        "reposts_count": 0,
+        "comments_count": 0,
+        "agent_reply": "",
+        "is_hot_take": False,
+        "streak_at_post_time": reposter_mem.get("current_streak", 0),
+        "original_post_id": post_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    _feed_posts[new_post_id] = new_post
+    _feed_likes[new_post_id] = []
+    _feed_reposts[new_post_id] = []
+    _feed_comments[new_post_id] = []
+    reposter_mem["posts_count"] = reposter_mem.get("posts_count", 0) + 1
+    memory.write(body.user_id, reposter_mem)
+    return {"reposted": True, "total_reposts": len(reposts), "new_post_id": new_post_id, "new_post": new_post}
 
 
 @app.post("/api/feed/{post_id}/comment")
