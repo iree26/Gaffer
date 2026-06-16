@@ -40,6 +40,8 @@ export default function Comments() {
   const [loadingComments, setLoadingComments] = useState(false);
   const [posting, setPosting] = useState(false);
   const [err, setErr] = useState(null);
+  const [terraceMessages, setTerraceMessages] = useState([]);
+  const [loadingTerraces, setLoadingTerraces] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -55,7 +57,18 @@ export default function Comments() {
   }, []);
 
   useEffect(() => {
-    if (!activeId || tab !== 'markets') return;
+    if (tab === 'terraces') {
+      (async () => {
+        setLoadingTerraces(true);
+        try {
+          const data = await api.getGeneralTerraces();
+          setTerraceMessages(data.messages || data || []);
+        } catch { /* no GET endpoint yet */ }
+        finally { setLoadingTerraces(false); }
+      })();
+      return;
+    }
+    if (!activeId) return;
     (async () => {
       setLoadingComments(true);
       try {
@@ -71,9 +84,10 @@ export default function Comments() {
     if (!t || posting || !activeId) return;
     setPosting(true);
     if (tab === 'terraces') {
+      setText("");
       try {
-        await api.terraceGeneral(user.displayName, t);
-        setText("");
+        const msg = await api.terraceGeneral(user.displayName, t);
+        setTerraceMessages((prev) => [msg, ...prev]);
       } catch { setErr("Couldn't send to the terraces."); }
       setPosting(false);
       return;
@@ -139,6 +153,8 @@ export default function Comments() {
           color:#000; background:var(--accent); padding:.65rem 1.25rem; border-radius:8px; transition:all .18s ease; }
         .composer .send:disabled{ opacity:.45; cursor:not-allowed; }
         .composer .send:hover:not(:disabled){ background:var(--accent-hover); }
+        .agent-reply{ background:var(--accent-muted); border:1px solid var(--border); border-radius:6px; padding:.55rem .75rem; margin-top:.4rem; font-size:.85rem; color:var(--text-secondary); line-height:1.4; }
+        .agent-tag{ font-weight:800; font-size:.7rem; letter-spacing:.08em; color:var(--accent); margin-right:.35rem; }
         .errbar{ background:rgba(255,59,48,.1); border:1px solid rgba(255,59,48,.3); color:var(--danger); font-weight:600;
           border-radius:8px; padding:.7rem 1rem; margin-bottom:1rem; font-size:.9rem; }
       `}</style>
@@ -155,7 +171,28 @@ export default function Comments() {
         {err && <div className="errbar">{err}</div>}
 
         {tab === 'terraces' ? (
-          <div className="empty">Send a message to the general terrace below!</div>
+          <div className="thread">
+            {loadingTerraces ? (
+              <div className="loading">Loading the terraces…</div>
+            ) : terraceMessages.length === 0 ? (
+              <div className="empty">Send a message to the general terrace below!</div>
+            ) : (
+              terraceMessages.map((c, i) => (
+                <div className="cmt" key={c.id || i}>
+                  <span className="cav" style={{ background: ballColor(c.display_name || c.user_id) }}>⚽</span>
+                  <div className="cbody">
+                    <div className="cmeta">
+                      <span className="cname">{c.display_name || c.user_id}</span>
+                      <Stars value={c.display_stars || 0} />
+                      <span className="ctime">{timeAgo(c.created_at)}</span>
+                    </div>
+                    <div className="ctext">{c.text}</div>
+                    {c.reply && <div className="agent-reply"><span className="agent-tag">GAFFER</span> {c.reply}</div>}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         ) : loadingMarkets ? (
           <div className="loading">Loading groups…</div>
         ) : (

@@ -52,8 +52,11 @@ export default function SignupQuiz() {
     setStep("expertise");
   }
 
-  function chooseExpertise(level) {
+  async function chooseExpertise(level) {
     setExpertise(level);
+    try {
+      await api.register(user.displayName, level);
+    } catch { /* user may already exist */ }
     setStep("quiz");
     startServerQuiz(level);
   }

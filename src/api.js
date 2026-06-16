@@ -50,6 +50,8 @@ export const api = {
   getProfilePredictions: (username) => req(`/api/profile/${encodeURIComponent(username)}/predictions`),
   setAllegiance:       (username, country, flagEmoji) =>
     req(`/api/profile/${encodeURIComponent(username)}/allegiance`, { method: 'POST', body: JSON.stringify({ country, flag_emoji: flagEmoji }) }),
+  updateProfile:       (username, displayName, bio) =>
+    req(`/api/profile/${encodeURIComponent(username)}/update`, { method: 'PUT', body: JSON.stringify({ display_name: displayName, bio }) }),
 
   // ── Signup Quiz ────────────────────────────────────────
   submitSignupQuiz: (userId, expertise, answers) =>
@@ -155,6 +157,7 @@ export const api = {
   // ── Terraces ────────────────────────────────────────────
   terraceGeneral: (userId, message) =>
     req('/api/terraces/general', { method: 'POST', body: JSON.stringify({ user_id: userId, message }) }),
+  getGeneralTerraces: () => req('/api/terraces/general'),
 
   // ── Predictions (Match Predictions) ─────────────────────
   submitPrediction: (userId, matchId, homeTeam, awayTeam, predictedWinner, predictedScore, firstScorer) =>
