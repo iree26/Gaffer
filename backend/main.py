@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from models import (
     AdminResolveRequest,
     AllegianceBody,
+    BracketSubmitBody,
     CardEventRequest,
     CardEventResponse,
     ChallengeAcceptBody,
