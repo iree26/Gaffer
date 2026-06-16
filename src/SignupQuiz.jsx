@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from './UserContext';
 import { api, knowledgeRating } from './api';
+import { pickQuestions, checkAnswer } from './questions';
 import GafferBackground from './GafferBackground';
 
 function tierOf(stars) {
@@ -29,7 +30,7 @@ export default function SignupQuiz() {
   const [selected, setSelected] = useState(null);
   const [locking, setLocking] = useState(false);
   const [correct, setCorrect] = useState(0);
-  const [submitting, setSubmitting] = useState(false);
+
   const [result, setResult] = useState(null);
 
   const totalQ = questions.length;
@@ -58,30 +59,24 @@ export default function SignupQuiz() {
       await api.register(user.displayName, level);
     } catch { /* user may already exist */ }
     setStep("quiz");
-    startServerQuiz(level);
+    startLocalQuiz(level);
   }
 
-  async function startServerQuiz(level) {
-    try {
-      const data = await api.startQuiz(user.displayName, level === 'expert' ? 'hard' : 'easy', 'football', 10);
-      setQuestions(data.questions || []);
-    } catch {
-      setStep("result");
-      setResult({ score: 0, percentage: 0 });
-    }
+  function startLocalQuiz(level) {
+    const diff = level === 'expert' ? 'hard' : 'easy';
+    const picked = pickQuestions(diff, 10);
+    setQuestions(picked);
   }
 
-  async function answer(idx) {
+  function answer(idx) {
     if (locking || !questions[qIndex]) return;
     setSelected(idx);
     setLocking(true);
 
     const q = questions[qIndex];
-    const isRight = idx === (q.correct_answer ?? q.answer);
     const answerText = (q.options || q.choices || [])[idx];
+    const isRight = checkAnswer(q, answerText);
     setCorrect(c => isRight ? c + 1 : c);
-
-    await api.answerQuiz(user.displayName, q.id, answerText).catch(() => {});
 
     setTimeout(() => {
       if (qIndex + 1 < totalQ) {
@@ -94,15 +89,8 @@ export default function SignupQuiz() {
     }, 360);
   }
 
-  async function finishQuiz() {
-    setSubmitting(true);
-    try {
-      const data = await api.getQuizResult(user.displayName);
-      setResult(data);
-    } catch {
-      setResult({ score: localPct, percentage: localPct });
-    }
-    setSubmitting(false);
+  function finishQuiz() {
+    setResult({ score: localPct, percentage: localPct });
     setStep("result");
   }
 
@@ -252,14 +240,7 @@ export default function SignupQuiz() {
             </div>
           )}
 
-          {step === "result" && submitting && (
-            <div className="step submitting" key="submitting">
-              <div className="loader" />
-              <p>The gaffer's marking your answers…</p>
-            </div>
-          )}
-
-          {step === "result" && !submitting && (
+          {step === "result" && (
             <div className="step result" key="result">
               <div className="ratingpill">{rating.emoji} {rating.label}</div>
               <h1 className="rtitle">{COPY[tier].t}</h1>
