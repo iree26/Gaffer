@@ -15,6 +15,8 @@ export default function Feed() {
   const [filter, setFilter] = useState('all')
   const [replyingTo, setReplyingTo] = useState(null)
   const [replyContent, setReplyContent] = useState('')
+  const [repostingId, setRepostingId] = useState(null)
+  const [repostQuote, setRepostQuote] = useState('')
 
   const loadFeed = useCallback(async () => {
     try {
@@ -56,7 +58,9 @@ export default function Feed() {
 
   async function handleRepost(postId) {
     try {
-      await api.repostPost(postId, user.displayName)
+      await api.repostPost(postId, user.displayName, repostQuote.trim())
+      setRepostQuote('')
+      setRepostingId(null)
       loadFeed()
     } catch { /* silent */ }
   }
@@ -144,6 +148,11 @@ export default function Feed() {
               {post.stars != null && <span className="post-stars">★ {post.stars}</span>}
               <span className="post-time">{post.created_at ? new Date(post.created_at).toLocaleDateString() : ''}</span>
             </div>
+            {post.type === 'repost' && (
+              <div style={{fontSize:'.75rem',color:'var(--text-secondary)',opacity:'.7',marginBottom:'.3rem',display:'flex',alignItems:'center',gap:'.3rem'}}>
+                🔄 Reposted
+              </div>
+            )}
             <div className="post-content">{post.content}</div>
             {post.agent_reply && (
               <div style={{fontSize:'.82rem',color:'var(--text-secondary)',background:'var(--card)',padding:'.5rem .7rem',borderRadius:'8px',marginBottom:'.5rem'}}>
@@ -154,13 +163,21 @@ export default function Feed() {
               <button onClick={() => handleLike(post.id)} className={post.liked ? 'liked' : ''}>
                 👍 {post.likes_count || 0}
               </button>
-              <button onClick={() => handleRepost(post.id)}>
+              <button onClick={() => setRepostingId(repostingId === post.id ? null : post.id)}>
                 🔄 {post.reposts_count || 0}
               </button>
               <button onClick={() => setReplyingTo(replyingTo === post.id ? null : post.id)}>
                 💬 {post.comments_count || 0}
               </button>
             </div>
+            {repostingId === post.id && (
+              <div className="reply-box">
+                <input value={repostQuote} onChange={(e) => setRepostQuote(e.target.value)}
+                  placeholder="Add a comment (optional)..." maxLength={240}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleRepost(post.id) }} />
+                <button onClick={() => handleRepost(post.id)}>Repost</button>
+              </div>
+            )}
             {replyingTo === post.id && (
               <div className="reply-box">
                 <input value={replyContent} onChange={(e) => setReplyContent(e.target.value)}
