@@ -21,9 +21,10 @@ const COPY = {
 
 export default function SignupQuiz() {
   const navigate = useNavigate();
-  const { user, update, setName } = useUser();
+  const { user, update, setName, login } = useUser();
   const [step, setStep] = useState("name");
   const [nameInput, setNameInput] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
   const [expertise, setExpertise] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [qIndex, setQIndex] = useState(0);
@@ -48,7 +49,8 @@ export default function SignupQuiz() {
 
   function submitName() {
     const n = nameInput.trim();
-    if (!n) return;
+    const p = passwordInput.trim();
+    if (!n || !p) return;
     setName(n);
     setStep("expertise");
   }
@@ -56,7 +58,8 @@ export default function SignupQuiz() {
   async function chooseExpertise(level) {
     setExpertise(level);
     try {
-      await api.register(user.displayName, level);
+      const result = await api.register(user.displayName, passwordInput.trim(), level);
+      login(result);
     } catch { /* user may already exist */ }
     setStep("quiz");
     startLocalQuiz(level);
@@ -109,7 +112,8 @@ export default function SignupQuiz() {
 
   function finish() {
     update({ expertise, quizScore: score, displayStars: stars });
-    navigate('/predict');
+    api.submitSignupQuiz(user.displayName, expertise, []).catch(() => {});
+    navigate('/talk');
   }
 
   return (
@@ -192,10 +196,13 @@ export default function SignupQuiz() {
           {step === "name" && (
             <div className="step" key="name">
               <div className="kicker">Welcome to Gaffer</div>
-              <h1 className="title">What should we call you?</h1>
+              <h1 className="title">Create your account</h1>
               <input className="nameField" value={nameInput} onChange={(e) => setNameInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') submitName(); }} placeholder="Your gaffer name" maxLength={20} autoFocus />
-              <button className="cta" style={{ marginTop: '1.4rem' }} disabled={!nameInput.trim()} onClick={submitName}>Continue</button>
+                onKeyDown={(e) => { if (e.key === 'Enter') document.getElementById('signup-pw').focus(); }} placeholder="Your gaffer name" maxLength={20} autoFocus />
+              <input id="signup-pw" className="nameField" type="password" value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') submitName(); }} placeholder="Choose a password" minLength={4} style={{ marginTop: '.7rem' }} />
+              <button className="cta" style={{ marginTop: '1.4rem' }} disabled={!nameInput.trim() || !passwordInput.trim()} onClick={submitName}>Continue</button>
             </div>
           )}
 

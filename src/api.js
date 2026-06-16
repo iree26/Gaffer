@@ -27,10 +27,10 @@ export const api = {
     req(`/markets/${marketId}/comments`, { method: 'POST', body: JSON.stringify({ userId, text }) }),
 
   // ── Users ───────────────────────────────────────────────
-  register:   (username, expertise) =>
-    req('/api/users/register', { method: 'POST', body: JSON.stringify({ username, expertise }) }),
-  login:      (username) =>
-    req('/api/users/login', { method: 'POST', body: JSON.stringify({ username }) }),
+  register:   (username, password, expertise) =>
+    req('/api/users/register', { method: 'POST', body: JSON.stringify({ username, password, expertise }) }),
+  login:      (username, password) =>
+    req('/api/users/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
   registerOld: (username, email) =>
     req('/api/users/register-old', { method: 'POST', body: JSON.stringify({ username, email }) }),
   getUser:         (userId)  => req(`/api/users/${encodeURIComponent(userId)}`),

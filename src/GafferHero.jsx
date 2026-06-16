@@ -97,6 +97,10 @@ export default function GafferHero() {
           .word{ opacity:1 !important; transform:none !important; animation:none !important; }
           .trust small{ opacity:.8 !important; animation:none !important; }
           .accent{ color:var(--accent); }
+        .signin-link{ color:var(--text-secondary); font-weight:600; font-size:.9rem; text-decoration:none;
+          border:1px solid var(--border); border-radius:8px; padding:.55rem 1.2rem;
+          transition:all .2s ease; display:inline-flex; align-items:center; gap:.4rem; }
+        .signin-link:hover{ border-color:var(--accent); color:var(--accent); }
         }
       `}</style>
 
@@ -132,6 +136,7 @@ export default function GafferHero() {
           <p className="sub">Predict every match, earn your stars, and prove you read the game better than anyone.</p>
           <div className="row">
             <button className="cta" onClick={() => navigate('/signup')}>Make your first call</button>
+            <a className="signin-link" onClick={() => navigate('/login')}>Already a gaffer? Sign in</a>
             <div className="trust">
               <span className="stars">
                 {[0,1,2,3,4].map(n => (
