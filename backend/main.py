@@ -1195,14 +1195,6 @@ def api_bracket_submit(body: BracketSubmitBody):
     return {"bracket_id": bracket_id, "submitted": True}
 
 
-@app.get("/api/bracket/{user_id}")
-def api_bracket_get(user_id: str):
-    bracket = _brackets.get(user_id)
-    if not bracket:
-        raise HTTPException(404, "No bracket found for this user")
-    return bracket
-
-
 @app.get("/api/bracket/leaderboard")
 def api_bracket_leaderboard():
     entries = []
@@ -1215,6 +1207,14 @@ def api_bracket_leaderboard():
         })
     entries.sort(key=lambda x: -x["points"])
     return {"leaderboard": entries}
+
+
+@app.get("/api/bracket/{user_id}")
+def api_bracket_get(user_id: str):
+    bracket = _brackets.get(user_id)
+    if not bracket:
+        raise HTTPException(404, "No bracket found for this user")
+    return bracket
 
 
 # ══════════════════════════════════════════════════════════════════════════
