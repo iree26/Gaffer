@@ -3,6 +3,9 @@ import { EMBLEMS } from './emblems';
 
 const UserCtx = createContext(null);
 
+const ONBOARDING_STEPS = ['quiz', 'predictions', 'leaderboard', 'feed', 'terraces', 'hottakes'];
+const ONBOARDING_COMPLETE = 'complete';
+
 function colorFromName(name) {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
@@ -20,9 +23,17 @@ function initFromStorage() {
   return null;
 }
 
+function initOnboarding() {
+  const stored = localStorage.getItem('gaffer_onboarding');
+  if (stored === ONBOARDING_COMPLETE) return ONBOARDING_COMPLETE;
+  if (stored && ONBOARDING_STEPS.includes(stored)) return stored;
+  return ONBOARDING_STEPS[0];
+}
+
 export function UserProvider({ children }) {
   const [authUser, setAuthUser] = useState(() => initFromStorage());
   const [token, setToken] = useState(() => localStorage.getItem('gaffer_token') || null);
+  const [onboardingStep, setOnboardingStepRaw] = useState(() => initOnboarding());
   const [user, setUser] = useState(() => {
     const au = initFromStorage();
     if (au) {
@@ -63,6 +74,27 @@ export function UserProvider({ children }) {
     else localStorage.removeItem('gaffer_auth');
   }, [authUser]);
 
+  const setOnboardingStep = (step) => {
+    localStorage.setItem('gaffer_onboarding', step);
+    setOnboardingStepRaw(step);
+  };
+
+  const advanceOnboarding = () => {
+    if (onboardingStep === ONBOARDING_COMPLETE) return;
+    const idx = ONBOARDING_STEPS.indexOf(onboardingStep);
+    const next = idx >= 0 && idx < ONBOARDING_STEPS.length - 1
+      ? ONBOARDING_STEPS[idx + 1]
+      : ONBOARDING_COMPLETE;
+    setOnboardingStep(next);
+    return next;
+  };
+
+  const completeOnboarding = () => {
+    setOnboardingStep(ONBOARDING_COMPLETE);
+  };
+
+  const isOnboarding = onboardingStep !== ONBOARDING_COMPLETE;
+
   const update = (patch) => setUser((u) => ({ ...u, ...patch }));
 
   const setName = (name) =>
@@ -85,6 +117,8 @@ export function UserProvider({ children }) {
   const logout = () => {
     setToken(null);
     setAuthUser(null);
+    setOnboardingStepRaw(ONBOARDING_STEPS[0]);
+    localStorage.removeItem('gaffer_onboarding');
     setUser({
       displayName: "you",
       avatarColor: colorFromName("you"),
@@ -102,7 +136,11 @@ export function UserProvider({ children }) {
   const isAuthenticated = !!token && !!authUser;
 
   return (
-    <UserCtx.Provider value={{ user, update, setName, token, authUser, login, logout, isAuthenticated }}>
+    <UserCtx.Provider value={{
+      user, update, setName, token, authUser, login, logout, isAuthenticated,
+      onboardingStep, setOnboardingStep, advanceOnboarding, completeOnboarding, isOnboarding,
+      ONBOARDING_STEPS, ONBOARDING_COMPLETE,
+    }}>
       {children}
     </UserCtx.Provider>
   );

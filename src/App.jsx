@@ -17,16 +17,29 @@ import GafferAI from './GafferAI'
 import Notifications from './Notifications'
 import Profile from './Profile'
 import Lineups from './Lineups'
+import OnboardingOverlay from './OnboardingOverlay'
 
-export default function App() {
-  const { isAuthenticated } = useUser();
+function AuthenticatedApp() {
+  const { isOnboarding, onboardingStep } = useUser();
 
-  if (isAuthenticated) {
+  if (isOnboarding && onboardingStep === 'quiz') {
     return (
+      <>
+        <OnboardingOverlay />
+        <Routes>
+          <Route path="*" element={<SignupQuiz />} />
+        </Routes>
+      </>
+    );
+  }
+
+  return (
+    <>
+      {isOnboarding && <OnboardingOverlay />}
       <Routes>
-        <Route path="/" element={<Navigate to="/talk" replace />} />
-        <Route path="/signup" element={<Navigate to="/talk" replace />} />
-        <Route path="/login" element={<Navigate to="/talk" replace />} />
+        <Route path="/" element={<Navigate to={isOnboarding ? '/predict' : '/feed'} replace />} />
+        <Route path="/signup" element={<Navigate to={isOnboarding ? '/predict' : '/feed'} replace />} />
+        <Route path="/login" element={<Navigate to={isOnboarding ? '/predict' : '/feed'} replace />} />
         <Route path="/predict" element={<PredictionScreen />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/talk" element={<Comments />} />
@@ -46,7 +59,15 @@ export default function App() {
         <Route path="/lineups" element={<Lineups />} />
         <Route path="/lineups/:matchId" element={<Lineups />} />
       </Routes>
-    );
+    </>
+  );
+}
+
+export default function App() {
+  const { isAuthenticated } = useUser();
+
+  if (isAuthenticated) {
+    return <AuthenticatedApp />;
   }
 
   return (

@@ -75,6 +75,27 @@ export default function Feed() {
     } catch (e) { alert(e.message) }
   }
 
+  async function handleQuote(postId) {
+    try {
+      await api.quotePost(postId, user.displayName, repostQuote.trim())
+      setRepostQuote('')
+      setRepostingId(null)
+      loadFeed()
+    } catch { /* silent */ }
+  }
+
+  async function handleShare(post) {
+    const url = `${window.location.origin}/feed?post=${post.id}`
+    try {
+      await api.sharePost(post.id, user.displayName)
+      await navigator.clipboard.writeText(url)
+      loadFeed()
+      alert('Post link copied!')
+    } catch {
+      prompt('Copy this link to share:', url)
+    }
+  }
+
   return (
     <div className="gaffer-app">
       <GafferBackground />
@@ -169,13 +190,20 @@ export default function Feed() {
               <button onClick={() => setReplyingTo(replyingTo === post.id ? null : post.id)}>
                 💬 {post.comments_count || 0}
               </button>
+              <button onClick={() => setRepostingId(repostingId === post.id ? null : post.id)} title="Quote">
+                💭 {post.quotes_count || 0}
+              </button>
+              <button onClick={() => handleShare(post)}>
+                📤 {post.shares_count || 0}
+              </button>
             </div>
             {repostingId === post.id && (
               <div className="reply-box">
                 <input value={repostQuote} onChange={(e) => setRepostQuote(e.target.value)}
                   placeholder="Add a comment (optional)..." maxLength={240}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleRepost(post.id) }} />
-                <button onClick={() => handleRepost(post.id)}>Repost</button>
+                <button onClick={() => handleRepost(post.id)}>🔄 Repost</button>
+                <button onClick={() => handleQuote(post.id)}>💭 Quote</button>
               </div>
             )}
             {replyingTo === post.id && (

@@ -21,7 +21,7 @@ export default function Login() {
     try {
       const result = await api.login(u, p);
       login(result);
-      navigate('/talk');
+      navigate('/');
     } catch (err) {
       setError(err.message || 'Login failed');
     }

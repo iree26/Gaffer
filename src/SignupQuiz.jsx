@@ -21,7 +21,7 @@ const COPY = {
 
 export default function SignupQuiz() {
   const navigate = useNavigate();
-  const { user, update, setName, login } = useUser();
+  const { user, update, setName, login, advanceOnboarding } = useUser();
   const [step, setStep] = useState("name");
   const [nameInput, setNameInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
@@ -113,7 +113,10 @@ export default function SignupQuiz() {
   function finish() {
     update({ expertise, quizScore: score, displayStars: stars });
     api.submitSignupQuiz(user.displayName, expertise, []).catch(() => {});
-    navigate('/talk');
+    const next = advanceOnboarding();
+    if (next === 'predictions') navigate('/predict');
+    else if (next === 'complete') navigate('/feed');
+    else navigate('/talk');
   }
 
   return (

@@ -82,6 +82,10 @@ export const api = {
     req(`/api/feed/${postId}/like`, { method: 'POST', body: JSON.stringify({ user_id: userId }) }),
   repostPost:   (postId, userId, comment = '') =>
     req(`/api/feed/${postId}/repost`, { method: 'POST', body: JSON.stringify({ user_id: userId, comment }) }),
+  quotePost:    (postId, userId, comment = '') =>
+    req(`/api/feed/${postId}/quote`, { method: 'POST', body: JSON.stringify({ user_id: userId, comment }) }),
+  sharePost:    (postId, userId) =>
+    req(`/api/feed/${postId}/share`, { method: 'POST', body: JSON.stringify({ user_id: userId }) }),
   commentOnPost: (postId, userId, content) =>
     req(`/api/feed/${postId}/comment`, { method: 'POST', body: JSON.stringify({ user_id: userId, content }) }),
   getPostComments: (postId) => req(`/api/feed/${postId}/comments`),
