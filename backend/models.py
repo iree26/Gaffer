@@ -346,11 +346,13 @@ class CardEventResponse(BaseModel):
 
 class RegisterBody(BaseModel):
     username: str
+    password: str
     expertise: str = "beginner"
 
 
 class LoginBody(BaseModel):
     username: str
+    password: str
 
 
 class AuthResponse(BaseModel):

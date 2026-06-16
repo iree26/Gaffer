@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import os
 import random
 import uuid
@@ -106,6 +107,16 @@ BRAVE_API_KEY = os.environ.get("BRAVE_API_KEY", "")
 
 def _generate_token() -> str:
     return f"tok_{uuid.uuid4().hex}"
+
+
+def _hash_password(password: str) -> str:
+    salt = uuid.uuid4().hex
+    return f"{salt}${hashlib.sha256((salt + password).encode()).hexdigest()}"
+
+
+def _verify_password(password: str, stored: str) -> bool:
+    salt, hsh = stored.split("$", 1)
+    return hsh == hashlib.sha256((salt + password).encode()).hexdigest()
 
 
 # ── Helper: get display name from memory ──────────────────────────────────
@@ -495,6 +506,7 @@ def api_register(body: RegisterBody):
         quiz_baseline=0.5,
         quiz_answers=[],
     )
+    user_data["password"] = _hash_password(body.password)
     user_data["badges"] = badges
     memory.write(body.username, user_data)
     return {
@@ -510,6 +522,9 @@ def api_login(body: LoginBody):
     user_mem = memory.read(body.username)
     if not user_mem:
         raise HTTPException(404, {"error": "User not found."})
+    stored = user_mem.get("password", "")
+    if not stored or not _verify_password(body.password, stored):
+        raise HTTPException(401, {"error": "Wrong password."})
     token = _generate_token()
     return {
         "user_id": body.username,
