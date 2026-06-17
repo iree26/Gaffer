@@ -79,26 +79,37 @@ const FALLBACK_GROUPS = [
     {id:"b0",label:"Canada",flag:"ca"},{id:"b1",label:"Switzerland",flag:"ch"},{id:"b2",label:"Qatar",flag:"qa"},{id:"b3",label:"Bosnia",flag:"ba"}] },
 ];
 
+// Creative, group-specific reaction shown the moment you pick. Wide pool so all 12 read differently.
 function localReaction(group, optIndex, expertise) {
   const teams = group.options.map((o) => o.label);
   const pick = teams[optIndex];
   const fav = teams[0];
   const rival = teams[1] || teams[0];
   const exp = expertise === "expert";
+
   const FAV_LINES = [
     `${pick} to top ${group.title}. Safe hands, but ${rival} won't roll over.`,
     `Hard to argue ${pick} in ${group.title}. Just don't sleep on ${rival}.`,
     `${pick}, the obvious call. ${exp ? "I expected more nerve from you." : "Solid, sensible, no notes."}`,
     `Backing ${pick}? The bookies agree. ${rival}'s the banana skin though.`,
+    `${pick} on paper, yes. But ${group.title}'s tighter than it looks.`,
+    `Sensible. ${pick} should have the quality. Group football humbles favourites though.`,
+    `${pick} it is. Chalk pick, but chalk wins more than it loses.`,
+    `Can't fault ${pick} to win ${group.title}. Just keep an eye on ${rival}.`,
   ];
   const UPSET_LINES = [
     `${pick} over ${fav} in ${group.title}? Bold. I respect a gambler.`,
     `Ooh, ${pick} to upset ${fav}. ${exp ? "You see something I don't?" : "Brave, I like it."}`,
     `${pick} winning ${group.title} means ${fav} go home early. Spicy.`,
-    `Calling ${pick} ahead of ${fav}, that's a statement. The table will remember it.`,
+    `Calling ${pick} ahead of ${fav}, that's a statement. I'll remember it.`,
+    `${pick} over ${fav}? Now that's a shout. Hope you can back it up.`,
+    `Daring. ${pick} toppling ${fav} would be one of the calls of the group stage.`,
+    `${pick} for the win? You're not here to play it safe, I see.`,
+    `Interesting, ${pick} over ${fav}. Either you know ball or you're feeling lucky.`,
   ];
+
   const pool = optIndex === 0 ? FAV_LINES : UPSET_LINES;
-  const seed = group.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) + optIndex;
+  const seed = group.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) + optIndex * 3;
   return pool[seed % pool.length];
 }
 
@@ -139,17 +150,13 @@ export default function PredictionScreen() {
     if (submitted) return;
     setPicks((p) => ({ ...p, [market.id]: option.id }));
     setPickIndex((p) => ({ ...p, [market.id]: optIndex }));
-    setAgentReplies((r) => ({ ...r, [market.id]: { text: "", loading: true } }));
+    // always show the creative local reaction immediately — group-specific and snappy
+    setAgentReplies((r) => ({ ...r, [market.id]: { text: localReaction(market, optIndex, user.expertise), loading: false } }));
+    // still record the pick with the backend so it persists to Walrus memory
     try {
       const res = await api.predict(user.displayName, market.id, option.id, "");
-      const live = res.agentReply || res.reply || "";
-      const generic = /interesting pick|what is your reasoning/i.test(live);
-      const text = (!live || generic) ? localReaction(market, optIndex, user.expertise) : live;
-      setAgentReplies((r) => ({ ...r, [market.id]: { text, loading: false } }));
       if (res.user) update({ displayStars: res.user.displayStars ?? user.displayStars, rank: res.user.rank ?? user.rank });
-    } catch (e) {
-      setAgentReplies((r) => ({ ...r, [market.id]: { text: localReaction(market, optIndex, user.expertise), loading: false } }));
-    }
+    } catch (e) { /* pick still stands locally */ }
   }
 
   function generateVerdict() {
@@ -300,8 +307,6 @@ export default function PredictionScreen() {
         @keyframes aIn{ from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:none;} }
         .agent .dot{ flex:none; width:.6rem; height:.6rem; border-radius:50%; background:var(--bright); margin-top:.3rem; box-shadow:0 0 0 4px rgba(22,180,95,.18); }
         .agent .atext{ font-size:.82rem; font-weight:600; color:var(--deep); line-height:1.4; }
-        .agent .atext i{ animation:blink 1.2s infinite; font-style:normal; } .agent .atext i:nth-child(2){animation-delay:.2s;} .agent .atext i:nth-child(3){animation-delay:.4s;}
-        @keyframes blink{0%,100%{opacity:.2;}50%{opacity:1;}}
         .chatlink{ display:block; margin-top:.5rem; border:none; background:transparent; cursor:pointer; font:inherit;
           font-weight:800; font-size:.74rem; letter-spacing:.03em; color:var(--bright); padding:0; }
         .chatlink:hover{ text-decoration:underline; }
@@ -391,8 +396,8 @@ export default function PredictionScreen() {
                   <div className="agent">
                     <span className="dot" />
                     <div style={{ flex: 1 }}>
-                      <span className="atext">{reply.loading ? <><i>.</i><i>.</i><i>.</i></> : reply.text}</span>
-                      {!reply.loading && reply.text && (
+                      <span className="atext">{reply.text}</span>
+                      {reply.text && (
                         <button className="chatlink" onClick={() => navigate('/talk', { state: { marketId: g.id } })}>
                           Talk about {g.title} →
                         </button>
@@ -449,7 +454,7 @@ export default function PredictionScreen() {
                 <p className="v-closing"><span className="remembers">remembers</span>{outcome.callback}</p>
                 <div className="v-actions">
                   <button className="v-primary" onClick={() => navigate('/leaderboard')}>See the table</button>
-                  <button className="v-ghost" onClick={() => setPhase(null)}>Review my card</button>
+                  <button className="v-ghost" onClick={() => navigate(-1) || setPhase(null)}>Review my card</button>
                 </div>
               </>
             )}
