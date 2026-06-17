@@ -21,7 +21,7 @@ class UserPublic(BaseModel):
     displayName: str
     expertise: str
     displayStars: float = Field(ge=0.5, le=5.0)
-    rank: int = Field(ge=1)
+    rank: int = Field(ge=0)
     createdAt: str
 
 
