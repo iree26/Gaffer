@@ -6,7 +6,7 @@ import '@fontsource/plus-jakarta-sans/500.css';
 import '@fontsource/plus-jakarta-sans/600.css';
 import '@fontsource/plus-jakarta-sans/700.css';
 import GafferBackground from './GafferBackground'
-import LandingSections from './LandingSections';
+
 
 // ISO 3166-1 alpha-2 codes (lowercase) for flag-icons.
 const FLAGS = [
@@ -306,8 +306,6 @@ export default function GafferHero() {
           </div>
        </main>
       </div>
-
-      <LandingSections />
     </>
   );
 }

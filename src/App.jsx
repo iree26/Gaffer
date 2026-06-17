@@ -4,6 +4,7 @@ import SignupQuiz from './SignupQuiz'
 import PredictionScreen from './PredictionScreen'
 import Leaderboard from './Leaderboard'
 import Comments from './Comments'
+import Profile from './Profile'
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
       <Route path="/predict" element={<PredictionScreen />} />
       <Route path="/leaderboard" element={<Leaderboard />} />
       <Route path="/talk" element={<Comments />} />
+      <Route path="/profile" element={<Profile />} />
     </Routes>
   )
 }

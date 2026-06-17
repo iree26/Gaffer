@@ -43,4 +43,6 @@ export const api = {
   getUser:        (userId)          => req(`/user/${encodeURIComponent(userId)}`),
   // CONFIRM AGAINST /docs: body shape and what it returns
   resolve:        (results)         => req('/admin/resolve', { method: 'POST', body: JSON.stringify({ results }) }),
+  getProfile:     (username)        => req(`/api/profile/${encodeURIComponent(username)}`),
 };
+
