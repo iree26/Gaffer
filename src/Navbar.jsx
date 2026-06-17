@@ -20,7 +20,7 @@ export default function Navbar() {
       <div className="nav-spacer" />
       <nav className="navbar">
         <style>{`
-          .nav-spacer{ height:94px; }
+          .nav-spacer{ height:150px; }
           .navbar{ position:fixed; top:12px; left:50%; transform:translateX(-50%); z-index:35;
             width:min(720px, calc(100% - 20px)); display:flex; flex-wrap:wrap; align-items:center; gap:.55rem;
             background:rgba(255,255,255,.7); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
@@ -28,15 +28,12 @@ export default function Navbar() {
             box-shadow:0 14px 44px rgba(7,94,50,.16);
             animation:navDrop .55s cubic-bezier(.2,.8,.25,1); }
           @keyframes navDrop{ from{opacity:0; transform:translateX(-50%) translateY(-18px);} to{opacity:1; transform:translateX(-50%) translateY(0);} }
-
           .nav-logo{ order:1; display:flex; align-items:center; gap:.45rem; cursor:pointer; }
           .nav-logo .ball{ width:28px; height:28px; flex:none; animation:navSpin 6s linear infinite; }
           @keyframes navSpin{ to{ transform:rotate(360deg); } }
           .nav-logo .wm{ font-family:'Syne',sans-serif; font-weight:800; font-size:1.15rem; color:#075E32; letter-spacing:-.01em; }
           .nav-logo .wm i{ color:#16B45F; font-style:normal; }
-
           .nav-av{ order:2; margin-left:auto; }
-
           .seg{ order:3; flex-basis:100%; position:relative; display:grid; grid-template-columns:repeat(3,1fr);
             background:rgba(11,107,58,.06); border-radius:14px; padding:4px; }
           .seg .puck{ position:absolute; top:4px; bottom:4px; left:4px; width:calc((100% - 8px)/3); border-radius:11px;
@@ -48,12 +45,13 @@ export default function Navbar() {
           .seg .tab svg{ width:17px; height:17px; flex:none; }
           .seg .tab.on{ color:#fff; }
           .seg .tab:hover:not(.on){ color:#075E32; }
-
           @media (min-width:660px){
+            .nav-spacer{ height:86px; }
             .navbar{ flex-wrap:nowrap; padding:.5rem .8rem; }
             .seg{ order:2; flex-basis:auto; width:360px; margin:0 auto; }
             .nav-av{ order:3; }
           }
+          @media (prefers-reduced-motion: reduce){ .navbar,.nav-logo .ball,.seg .puck{ animation:none !important; transition:none !important; } }
         `}</style>
 
         <div className="nav-logo" onClick={() => navigate('/')}>

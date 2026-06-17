@@ -79,8 +79,6 @@ const FALLBACK_GROUPS = [
     {id:"b0",label:"Canada",flag:"ca"},{id:"b1",label:"Switzerland",flag:"ch"},{id:"b2",label:"Qatar",flag:"qa"},{id:"b3",label:"Bosnia",flag:"ba"}] },
 ];
 
-// Creative, matchup-aware reaction the gaffer gives the moment you pick.
-// Banter + a real football observation, varied by whether you backed the favourite or an upset.
 function localReaction(group, optIndex, expertise) {
   const teams = group.options.map((o) => o.label);
   const pick = teams[optIndex];
@@ -100,7 +98,6 @@ function localReaction(group, optIndex, expertise) {
     `Calling ${pick} ahead of ${fav}, that's a statement. The table will remember it.`,
   ];
   const pool = optIndex === 0 ? FAV_LINES : UPSET_LINES;
-  // deterministic pick so it stays stable per group, not random each render
   const seed = group.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) + optIndex;
   return pool[seed % pool.length];
 }
@@ -146,7 +143,6 @@ export default function PredictionScreen() {
     try {
       const res = await api.predict(user.displayName, market.id, option.id, "");
       const live = res.agentReply || res.reply || "";
-      // use the live reply; if it's empty or the generic repeated line, fall back to a creative local one
       const generic = /interesting pick|what is your reasoning/i.test(live);
       const text = (!live || generic) ? localReaction(market, optIndex, user.expertise) : live;
       setAgentReplies((r) => ({ ...r, [market.id]: { text, loading: false } }));
@@ -185,21 +181,14 @@ export default function PredictionScreen() {
     setTimeout(() => setPhase("verdict"), 1700);
   }
 
-  // REAL rewind: trigger resolution on the backend, then read true stars/rank from /user.
   async function startRewind() {
-    // build the results map the demo will resolve with.
-    // CONFIRM AGAINST /docs: backend expects { marketId: winningOptionId }.
-    // For the demo we declare the favourite (option 0) the winner of each group.
     const results = {};
     groups.forEach((g) => { results[g.id] = g.options[0]?.id; });
 
     setPhase("rewind"); setRevealed(0);
 
-    // fire the real resolution (don't block the reveal animation on it)
-    let resolved = null;
     const resolvePromise = api.resolve(results).catch(() => null);
 
-    // compute the per-card hit/miss display from the same results we sent
     const hits = {};
     let correct = 0;
     groups.forEach((g) => {
@@ -213,14 +202,12 @@ export default function PredictionScreen() {
     const baseline = user.displayStars || 0;
     const prevRank = user.rank ?? 248;
 
-    // animate the reveal
     let n = 0;
     const id = setInterval(async () => {
       n++; setRevealed(n);
       if (n >= groups.length) {
         clearInterval(id);
-        resolved = await resolvePromise;
-        // pull TRUE stars/rank from the backend so it matches the leaderboard
+        await resolvePromise;
         let newStars, newRank;
         try {
           const me = await api.getUser(user.displayName);
@@ -250,10 +237,16 @@ export default function PredictionScreen() {
   if (loading) {
     return (
       <div className="gaffer-app"><PitchBg />
-        <style>{`.gaffer-app{position:relative;isolation:isolate;min-height:100svh;width:100%;background:transparent;display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans',sans-serif;}
-          .ld{font-family:'Syne',sans-serif;font-weight:800;color:#0B6B3A;font-size:1.2rem;text-align:center;}
-          .ld svg{width:70px;height:70px;display:block;margin:0 auto 1rem;animation:s 2.4s linear infinite;}@keyframes s{to{transform:rotate(360deg);}}`}</style>
-        <div className="ld"><PitchBall /> Waking the gaffer…</div>
+        <style>{`.gaffer-app{position:relative;isolation:isolate;min-height:100svh;width:100%;background:transparent;display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans',sans-serif;padding:1.5rem;}
+          .ld{text-align:center;max-width:300px;}
+          .ld svg{width:74px;height:74px;display:block;margin:0 auto 1.1rem;animation:s 2.4s linear infinite;}@keyframes s{to{transform:rotate(360deg);}}
+          .ld h3{font-family:'Syne',sans-serif;font-weight:800;color:#0B6B3A;font-size:1.25rem;margin:0 0 .4rem;}
+          .ld p{font-weight:500;color:#075E32;opacity:.7;font-size:.9rem;line-height:1.4;margin:0;}`}</style>
+        <div className="ld">
+          <PitchBall />
+          <h3>Waking the gaffer…</h3>
+          <p>First load can take a moment while the pitch warms up. Hang tight.</p>
+        </div>
       </div>
     );
   }
@@ -343,19 +336,18 @@ export default function PredictionScreen() {
         .d-stars .old{ color:var(--line); } .d-stars .arrow{ color:var(--deep); opacity:.5; } .d-stars .new.up{ color:var(--bright); } .d-stars .new.down{ color:var(--down); }
         .d-rank{ font-weight:700; font-size:.9rem; color:var(--deep); } .d-rank b.up{ color:var(--bright); } .d-rank b.down{ color:var(--down); }
         @media (max-width:620px){
-            .grid{ grid-template-columns:1fr; gap:.85rem; }
-            .wrap{ padding:0 1rem; }
-            .h{ font-size:1.9rem; }
-            .card{ padding:.9rem; }
-            .grp{ font-size:1rem; }
-            .teams{ gap:.5rem; }
-            .team{ padding:.6rem .65rem; }
-            .team-name{ font-size:.82rem; white-space:normal; }
-            .submitbar{ bottom:10px; padding:.7rem .8rem .7rem 1rem; }
-            .submit-label{ font-size:.8rem; }
-            .submit{ padding:.7rem 1.1rem; font-size:.9rem; }
-            }
-  `}</style>
+          .grid{ grid-template-columns:1fr; gap:.85rem; }
+          .h{ font-size:1.9rem; }
+          .card{ padding:.9rem; }
+          .grp{ font-size:1rem; }
+          .teams{ gap:.5rem; }
+          .team{ padding:.6rem .65rem; }
+          .team-name{ font-size:.82rem; white-space:normal; }
+          .submitbar{ bottom:10px; padding:.7rem .8rem .7rem 1rem; }
+          .submit-label{ font-size:.8rem; }
+          .submit{ padding:.7rem 1.1rem; font-size:.9rem; }
+        }
+      `}</style>
 
       <main className="wrap">
         <div className="pbar"><i style={{ width: `${(done / groups.length) * 100}%` }} /></div>
@@ -467,4 +459,3 @@ export default function PredictionScreen() {
     </div>
   );
 }
-
