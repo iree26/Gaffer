@@ -549,7 +549,7 @@ def api_user_exists(username: str):
 # FEATURE 2: FULL SOCIAL PROFILES
 # ══════════════════════════════════════════════════════════════════════════
 
-@app.get("/api/profile/{username}")
+@app.get("/api/profile/{username}", response_model=FullProfileResponse)
 def api_profile(username: str):
     user_mem = memory.read(username)
     if not user_mem:
@@ -570,32 +570,32 @@ def api_profile(username: str):
         if len(recent_posts) >= 5:
             break
 
-    return {
-        "username": username,
-        "display_name": user_mem.get("displayName", username),
-        "stars": user_mem.get("displayStars", 0.5),
-        "rank": user_mem.get("rank", 0),
-        "expertise": user_mem.get("expertise", "beginner"),
-        "quiz_score": user_mem.get("quizScore", 0),
-        "country_allegiance": user_mem.get("country_allegiance"),
-        "flag_emoji": user_mem.get("flag_emoji"),
-        "followers_count": followers_count,
-        "following_count": following_count,
-        "predictions_count": predictions_count,
-        "correct_predictions": correct,
-        "accuracy": accuracy,
-        "current_streak": user_mem.get("current_streak", 0),
-        "best_streak": user_mem.get("best_streak", 0),
-        "last_5_calls": user_mem.get("last_5_calls", []),
-        "posts_count": user_mem.get("posts_count", 0),
-        "joined": user_mem.get("createdAt", ""),
-        "badges": badges,
-        "recent_posts": recent_posts,
-        "recent_predictions": recent_predictions,
-        "hot_takes_count": user_mem.get("hot_takes_count", 0),
-        "challenges_won": user_mem.get("challenges_won", 0),
-        "challenges_lost": user_mem.get("challenges_lost", 0),
-    }
+    return FullProfileResponse(
+        username=username,
+        display_name=user_mem.get("displayName", username),
+        stars=user_mem.get("displayStars", 0.5),
+        rank=user_mem.get("rank", 0),
+        expertise=user_mem.get("expertise", "beginner"),
+        quiz_score=user_mem.get("quizScore", 0),
+        country_allegiance=user_mem.get("country_allegiance"),
+        flag_emoji=user_mem.get("flag_emoji"),
+        followers_count=followers_count,
+        following_count=following_count,
+        predictions_count=predictions_count,
+        correct_predictions=correct,
+        accuracy=accuracy,
+        current_streak=user_mem.get("current_streak", 0),
+        best_streak=user_mem.get("best_streak", 0),
+        last_5_calls=user_mem.get("last_5_calls", []),
+        posts_count=user_mem.get("posts_count", 0),
+        joined=user_mem.get("createdAt", ""),
+        badges=badges,
+        recent_posts=recent_posts,
+        recent_predictions=recent_predictions,
+        hot_takes_count=user_mem.get("hot_takes_count", 0),
+        challenges_won=user_mem.get("challenges_won", 0),
+        challenges_lost=user_mem.get("challenges_lost", 0),
+    )
 
 
 @app.post("/api/profile/{username}/follow")
