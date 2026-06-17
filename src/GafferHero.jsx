@@ -304,8 +304,10 @@ export default function GafferHero() {
               <small>Your stars rise and fall with every result.</small>
             </div>
           </div>
-        </main>
+       </main>
       </div>
+
+      <LandingSections />
     </>
   );
 }
